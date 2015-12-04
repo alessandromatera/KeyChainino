@@ -1,3 +1,9 @@
+/*************************************************************************
+ * ARKANOID GAME FOR KEYCHAININO www.keychainino.com
+ *
+ * created by Alessandro Matera
+ * ************************************************************************
+ */
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
@@ -153,8 +159,7 @@ const PROGMEM bool zero[MATRIX_ROW][MATRIX_COL] = {
 ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
   cli(); //disable interrupt
 
-  //TCNT1 = timer1_counter;   // preload timer
-
+  //THIS PART IS USED TO UPDATE THE BALL'S MOVIMENT IN THE GAME
   //if game is started change ball position
   if (gameStarted) {
     //it is a counter to update ball after counter reset becouse timer interrupt is to fast
@@ -166,6 +171,12 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
 
   }
 
+
+  // THIS PART IS USED TO UPDATE THE CHARLIEPLEXING LEDS MATRIX
+  // YOU CAN JUST DON'T CARE ABOUT THIS PART
+  // BECAUSE YOU CAN CODE LIKE A STANDARD MATRIX BY MANIPULATING THE
+  // VALUE OF THE matrixState MATRIX
+  
   //check from matrixState which LED to turn ON or OFF
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
@@ -392,7 +403,7 @@ void showScore(byte scoreNumber) {
 
 //show the number according to the matrix number
 void showNumber(byte number) {
-  
+
   //according to the number to show we populate the matrixState
   // with the relative matrix, in this for-cycles.
   switch (number) {
@@ -505,7 +516,7 @@ void resetGame() {
 }
 
 /*void showMatrix(bool newMatrix[MATRIX_ROW][MATRIX_COL]) {
-  
+
   //show up the matrix by putting it to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
