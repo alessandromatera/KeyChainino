@@ -1,3 +1,4 @@
 # KeyChainino
 KeyChainino is the first KeyChain programmable with Arduino
-\nFollow the instruction on keychainino.com
+
+Follow the instruction on [KeyChainino.com](http://www.keychainino.com)
