@@ -70,7 +70,16 @@ const byte ballUpdatePositionCONSTANT = 30; //this number is directly proportion
 //the game score calculated in the number of collision between bar and ball
 byte score = 0; //0 //MAX 255 for byte
 
-bool gameStarted = true; //indicates if the game is started
+bool gameStarted = false; //indicates if the game is started
+
+//KeyChainino Face stored in FLASH in order to reduce RAM size
+const PROGMEM bool KeyChaininoFace[MATRIX_ROW][MATRIX_COL] = {
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 1, 1, 0, 0},
+  {0, 0, 0, 0, 0, 0},
+  {1, 0, 0, 0, 0, 1},
+  {0, 1, 1, 1, 1, 0}
+};
 
 //NUMBERS used in score stored in FLASH in order to reduce RAM size
 
@@ -176,7 +185,7 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
   // YOU CAN JUST DON'T CARE ABOUT THIS PART
   // BECAUSE YOU CAN CODE LIKE A STANDARD MATRIX BY MANIPULATING THE
   // VALUE OF THE matrixState MATRIX
-  
+
   //check from matrixState which LED to turn ON or OFF
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
@@ -237,6 +246,12 @@ void setup() {
   power_usi_disable(); // disable USI
   // enable global interrupts:
   sei();
+
+  showKeyChaininoFace(); //show KeyChainino smile face
+  delay(500);
+  clearMatrix(); //clear the Matrix
+  gameStarted = true; //Start the game
+
 }
 
 void loop() {
@@ -255,6 +270,8 @@ void endGame() {
   //SHOW SCORE
   showScore(score); //shows the score number
   clearMatrix(); //clear all the LEDs
+  showKeyChaininoFace(); //show KeyChaininoFace
+  delay(500);
   goSleep(); //sleep to reduce power
   resetGame(); //reset game variables
 }
@@ -484,6 +501,11 @@ void showNumber(byte number) {
 void resetGame() {
   //reset all game variables to the start condition
   clearMatrix();
+  showKeyChaininoFace();
+  delay(500);
+  clearMatrix();
+  delay(300);
+
   barCurrentPosition[0][0] = 0;
   barCurrentPosition[0][1] = 0;
   barCurrentPosition[1][0] = 0;
@@ -515,16 +537,6 @@ void resetGame() {
   gameStarted = true;
 }
 
-/*void showMatrix(bool newMatrix[MATRIX_ROW][MATRIX_COL]) {
-
-  //show up the matrix by putting it to the matrixState
-  for (byte i = 0; i < MATRIX_ROW; i++) {
-    for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = newMatrix[i][j];
-    }
-  }
-}*/
-
 void clearMatrix() {
   //clear the matrix by inserting 0 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
@@ -539,6 +551,14 @@ void fullMatrix() {
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
       matrixState[i][j] = 1;
+    }
+  }
+}
+
+void showKeyChaininoFace() {
+  for (byte i = 0; i < MATRIX_ROW; i++) {
+    for (byte j = 0; j < MATRIX_COL; j++) {
+      matrixState[i][j] = (bool*)pgm_read_byte(&(KeyChaininoFace[i][j])); //here we read the matrix from FLASH
     }
   }
 }
