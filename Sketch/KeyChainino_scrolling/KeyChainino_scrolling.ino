@@ -1,5 +1,5 @@
 /*************************************************************************
- * ARKANOID GAME FOR KEYCHAININO www.keychainino.com
+ * TEXT SCROLLING FOR KEYCHAININO www.keychainino.com
  *
  * created by Alessandro Matera
  * ************************************************************************

@@ -19,7 +19,7 @@
 
 const byte pins[PIN_NUMBER] = {0, 1, 2, 3, 7, 9, 10}; //the number of the pin used for the LEDs in ordered
 
-const byte connectionMatrix[MATRIX_ROW][MATRIX_COL][2] = { //the matrix that shows the LEDs pin connections. First Value is the Anode, second is the Catode
+const byte connectionMatrix[MATRIX_ROW][MATRIX_COL][2] = { //the matrix that shows the LEDs pin connections. First Value is the Anode, second is the Cathode
   {{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}},
   {{0, 1}, {2, 1}, {3, 1}, {4, 1}, {5, 1}, {6, 1}},
   {{0, 2}, {1, 2}, {3, 2}, {4, 2}, {5, 2}, {6, 2}},
