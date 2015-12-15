@@ -64,7 +64,7 @@ int ballY = ballCurrentPosition[0]; //position as X and Y
 int ballDirection[2] = {1, 0}; //Y, X  indicates the direction where the ball is going
 
 byte ballUpdatePositionCounter = 0; //it is a counter to update ball position
-const byte ballUpdatePositionCONSTANT = 30; //this number is directly proportional to the speed of the ball
+const byte ballUpdatePositionCONSTANT = 12; //this number is directly proportional to the speed of the ball
 
 //the game score calculated in the number of collision between bar and ball
 byte score = 0; //0 //MAX 255 for byte
@@ -166,6 +166,7 @@ const PROGMEM bool zero[MATRIX_ROW][MATRIX_COL] = {
 
 ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
   cli(); //disable interrupt
+  TCNT1 = 65405;
 
   //THIS PART IS USED TO UPDATE THE BALL'S MOVIMENT IN THE GAME
   //if game is started change ball position
@@ -193,7 +194,7 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
         pinMode(pins[connectionMatrix[i][j][1]], OUTPUT); //set negative pole to OUTPUT
         digitalWrite(pins[connectionMatrix[i][j][0]], HIGH); //set positive pole to HIGH
         digitalWrite(pins[connectionMatrix[i][j][1]], LOW); //set negative pole to LOW
-        delayMicroseconds(400); //250
+        delayMicroseconds(500); //250
         pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
         pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
       }
@@ -234,9 +235,13 @@ void setup() {
   // enable Timer1 overflow interrupt:
   TIMSK1 |= (1 << TOIE1);
 
-  // Set CS10 bit so timer runs at clock speed: (no prescaling)
-  TCCR1B |= (1 << CS10);
+  // preload timer 65536 - (8000000 / 1024 / 60) = 60Hz
+  TCNT1 = 65405;
 
+  // set 1024 prescaler
+  bitSet(TCCR1B, CS12);
+  bitSet(TCCR1B, CS10);
+  
   bitSet(GIMSK, PCIE0); //enable pingChange global interrupt
 
   //disabling all unnecessary peripherals to reduce power
@@ -353,7 +358,7 @@ void updateBarPosition() {
   // to left (button A) or right (button B)
 
   if (!digitalRead(BUTTON_B)) {
-    delay(100);
+    delay(80);
     if (!digitalRead(BUTTON_B)) {
       barX1++;
       barX2++;
@@ -361,7 +366,7 @@ void updateBarPosition() {
   }
 
   if (!digitalRead(BUTTON_A)) {
-    delay(100);
+    delay(80);
     if (!digitalRead(BUTTON_A)) {
       barX1--;
       barX2--;
