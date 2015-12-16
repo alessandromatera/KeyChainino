@@ -405,101 +405,69 @@ void updateBarPosition() {
   matrixState[barNewPosition[1][0]][barNewPosition[1][1]] = 1;
 }
 
+
 void showScore(byte scoreNumber) {
-  //if the score number is less than 10
-  // show this number
-  if (scoreNumber < 10) {
-    showNumber(scoreNumber);
-  } else { //if the score number is higher than 9
-    int scoreDecimal = scoreNumber / 10;
-    showNumber(scoreDecimal); //show the first decimal number
-    delay(1500);
-    clearMatrix(); //clear all LEDs
-    delay(100);
-    int scoreSecond = scoreNumber - (scoreDecimal * 10);
-    showNumber(scoreSecond); //show the second number
+
+  clearMatrix();
+  
+  char scoreChar[5]; //char were to put the score number
+
+  //converting the score to scoreChar
+  String str = String(scoreNumber) + ' ';
+  str.toCharArray(scoreChar, 5);
+
+  for (char c = 0; scoreChar[c] != '\0'; c++) {
+    for (int col = MATRIX_COL - 1; col >= 0; col--) { // we start to display the charter matrix from right to left
+      for (byte i = 0; i < MATRIX_COL; i++) { //put the charter into the matrixState
+        for (byte j = 0; j < MATRIX_ROW; j++) { //as usual
+          if (i >= col) { //if the number of col(i) is higher than the scrolling col, we show the correct charter according to charterToShow var.
+            writeCharter(scoreChar[c], i, j, col);
+          } else { //else, if col (i) is less than col, we shift the matrixState
+            matrixState[j][i] = matrixState[j][i + 1];
+          }
+        }
+
+      }
+      delay(150);
+    }
   }
-  delay(1500);
 }
 
 //show the number according to the matrix number
-void showNumber(byte number) {
-
-  //according to the number to show we populate the matrixState
-  // with the relative matrix, in this for-cycles.
-  switch (number) {
-    case 0:
-      for (byte i = 0; i < MATRIX_ROW; i++) {
-        for (byte j = 0; j < MATRIX_COL; j++) {
-          matrixState[i][j] = (bool*)pgm_read_byte(&(zero[i][j])); //here we read the matrix from FLASH
-        }
-      }
-      break;
-    case 1:
-      for (byte i = 0; i < MATRIX_ROW; i++) {
-        for (byte j = 0; j < MATRIX_COL; j++) {
-          matrixState[i][j] = (bool*)pgm_read_byte(&(one[i][j]));
-        }
-      }
-      break;
-    case 2:
-      for (byte i = 0; i < MATRIX_ROW; i++) {
-        for (byte j = 0; j < MATRIX_COL; j++) {
-          matrixState[i][j] = (bool*)pgm_read_byte(&(two[i][j]));
-        }
-      }
-      break;
-    case 3:
-      for (byte i = 0; i < MATRIX_ROW; i++) {
-        for (byte j = 0; j < MATRIX_COL; j++) {
-          matrixState[i][j] = (bool*)pgm_read_byte(&(three[i][j]));
-        }
-      }
-      break;
-    case 4:
-      for (byte i = 0; i < MATRIX_ROW; i++) {
-        for (byte j = 0; j < MATRIX_COL; j++) {
-          matrixState[i][j] = (bool*)pgm_read_byte(&(four[i][j]));
-        }
-      }
-      break;
-    case 5:
-      for (byte i = 0; i < MATRIX_ROW; i++) {
-        for (byte j = 0; j < MATRIX_COL; j++) {
-          matrixState[i][j] = (bool*)pgm_read_byte(&(five[i][j]));
-        }
-      }
-      break;
-    case 6:
-      for (byte i = 0; i < MATRIX_ROW; i++) {
-        for (byte j = 0; j < MATRIX_COL; j++) {
-          matrixState[i][j] = (bool*)pgm_read_byte(&(six[i][j]));
-        }
-      }
-      break;
-    case 7:
-      for (byte i = 0; i < MATRIX_ROW; i++) {
-        for (byte j = 0; j < MATRIX_COL; j++) {
-          matrixState[i][j] = (bool*)pgm_read_byte(&(seven[i][j]));
-        }
-      }
-      break;
-    case 8:
-      for (byte i = 0; i < MATRIX_ROW; i++) {
-        for (byte j = 0; j < MATRIX_COL; j++) {
-          matrixState[i][j] = (bool*)pgm_read_byte(&(eight[i][j]));
-        }
-      }
-      break;
-    case 9:
-      for (byte i = 0; i < MATRIX_ROW; i++) {
-        for (byte j = 0; j < MATRIX_COL; j++) {
-          matrixState[i][j] = (bool*)pgm_read_byte(&(nine[i][j]));
-        }
-      }
-      break;
+void writeCharter(char charterToShow, byte i, byte j, byte col) {
+  if (charterToShow == '0') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(zero[j][i - col]));
   }
-
+  else if (charterToShow == '1') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(one[j][i - col]));
+  }
+  else if (charterToShow == '2') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(two[j][i - col]));
+  }
+  else if (charterToShow == '3') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(three[j][i - col]));
+  }
+  else if (charterToShow == '4') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(four[j][i - col]));
+  }
+  else if (charterToShow == '5') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(five[j][i - col]));
+  }
+  else if (charterToShow == '6') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(six[j][i - col]));
+  }
+  else if (charterToShow == '7') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(seven[j][i - col]));
+  }
+  else if (charterToShow == '8') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(eight[j][i - col]));
+  }
+  else if (charterToShow == '9') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(nine[j][i - col]));
+  }
+  else if (charterToShow == ' ') { //SYMBOLS FOR SPACE
+    matrixState[j][i] = 0;
+  }
 }
 
 void resetGame() {
