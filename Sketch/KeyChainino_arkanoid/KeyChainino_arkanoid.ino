@@ -241,7 +241,7 @@ void setup() {
   // set 1024 prescaler
   bitSet(TCCR1B, CS12);
   bitSet(TCCR1B, CS10);
-  
+
   bitSet(GIMSK, PCIE0); //enable pingChange global interrupt
 
   //disabling all unnecessary peripherals to reduce power
@@ -286,7 +286,22 @@ void updateBallPosition() {
   ballX = ballCurrentPosition[1] + ballDirection[1];
 
   //checkCollision
-  if (ballY >= MATRIX_ROW - 1) { // ball touched bottom
+  if (ballY >= (MATRIX_ROW - 2) && (ballX == barCurrentPosition[0][1] || ballX == barCurrentPosition[1][1])) { // ball touched bottom
+    ballY = MATRIX_ROW - 2;
+    if (ballX >= MATRIX_COL - 1) {
+      ballX = MATRIX_COL - 1;
+    }
+    if (ballX <= 0) {
+      ballX = 0;
+    }
+    if (ballX == barCurrentPosition[0][1] || ballX == barCurrentPosition[1][1]) { //ball touched bar
+      ballDirection[0] = -1;
+      ballDirection[1] = random(-1, 2);
+      score++;
+    }
+  }
+
+  else if (ballY >= MATRIX_ROW - 1) { // ball is getting touch bottom and bar
     ballY = MATRIX_ROW - 1;
     if (ballX >= MATRIX_COL - 1) {
       ballX = MATRIX_COL - 1;
@@ -306,18 +321,33 @@ void updateBallPosition() {
     }
 
   }
+
+  else if (ballX >= (MATRIX_COL - 1) && ballY <= 0) { //ball touched right & top
+    ballX = MATRIX_COL - 1;
+    ballY = 0;
+    ballDirection[0] = 1;
+    ballDirection[1] = -1;
+  }
+
+  else if (ballX <= 0 && ballY <= 0) { //ball touched left & top
+    ballX = 0;
+    ballY = 0;
+    ballDirection[0] = 1;
+    ballDirection[1] = 1;
+  }
+
   else if (ballY <= 0) { //ball touch top
     ballY = 0;
-    if (ballX >= MATRIX_COL - 1) {
+    if (ballX >= (MATRIX_COL - 1)) {
       ballX = MATRIX_COL - 1;
     }
     if (ballX <= 0) {
       ballX = 0;
     }
     ballDirection[0] = 1;
-    ballDirection[1] = random(-1, 2);
   }
-  else if (ballX >= MATRIX_COL) { //ball touched right
+
+  else if (ballX >= (MATRIX_COL - 1)) { //ball touched right
     ballX = MATRIX_COL - 1;
     if (ballY >= MATRIX_ROW - 1) {
       ballY = MATRIX_ROW - 1;
@@ -329,9 +359,8 @@ void updateBallPosition() {
 
   }
   else if (ballX <= 0) { //ball touched left
-    //Serial.println("ball touched left");
     ballX = 0;
-    if (ballY >= MATRIX_ROW - 1) {
+    if (ballY >= (MATRIX_ROW - 1)) {
       ballY = MATRIX_ROW - 1;
     }
     if (ballY <= 0) {
@@ -409,7 +438,7 @@ void updateBarPosition() {
 void showScore(byte scoreNumber) {
 
   clearMatrix();
-  
+
   char scoreChar[5]; //char were to put the score number
 
   //converting the score to scoreChar
@@ -545,7 +574,9 @@ void goSleep() {
   power_timer0_disable(); //disable Timer 0
   power_timer1_disable(); //disable Timer 1
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-  sleep_mode();
+  while (digitalRead(BUTTON_B) || digitalRead(BUTTON_A)) { //until all the two buttons are pressend
+    sleep_mode();
+  }
   //disable interrupt buttons after sleep
   bitClear(GIMSK, INT0); //disable interrupt pin 8 - button B - INT0
   bitClear(PCMSK0, PCINT6); //disable interrupt pin 6 - button A - PCINT6
