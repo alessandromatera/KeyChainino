@@ -136,6 +136,7 @@ const PROGMEM bool m[MATRIX_ROW][MATRIX_COL] = {
 
 ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
   cli(); //disable interrupt
+  TCNT1 = 65405;
 
   // THIS PART IS USED TO UPDATE THE CHARLIEPLEXING LEDS MATRIX
   // YOU CAN JUST DON'T CARE ABOUT THIS PART
@@ -191,8 +192,12 @@ void setup() {
   // enable Timer1 overflow interrupt:
   TIMSK1 |= (1 << TOIE1);
 
-  // Set CS10 bit so timer runs at clock speed: (no prescaling)
-  TCCR1B |= (1 << CS10);
+  // preload timer 65536 - (8000000 / 1024 / 60) = 60Hz
+  TCNT1 = 65405;
+
+  // set 1024 prescaler
+  bitSet(TCCR1B, CS12);
+  bitSet(TCCR1B, CS10);
 
   bitSet(GIMSK, PCIE0); //enable pingChange global interrupt
 
