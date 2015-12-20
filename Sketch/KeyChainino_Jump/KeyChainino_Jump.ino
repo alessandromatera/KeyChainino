@@ -250,7 +250,7 @@ void setup() {
 
   //show man
   matrixState[manNewPosition[0]][manCurrentPosition[1]] = 1;
-  
+
   gameStarted = true; //Start the game
 }
 
@@ -366,7 +366,7 @@ void updateManPosition() {
 }
 
 void showScore(byte scoreNumber) {
-  
+
   char scoreChar[5]; //char were to put the score number
 
   //converting the score to scoreChar
@@ -496,7 +496,9 @@ void goSleep() {
   power_timer0_disable(); //disable Timer 0
   power_timer1_disable(); //disable Timer 1
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-  sleep_mode();
+  while (digitalRead(BUTTON_B) || digitalRead(BUTTON_A)) { //until all the two buttons are pressend
+    sleep_mode();
+  }
   //disable interrupt buttons after sleep
   bitClear(GIMSK, INT0); //disable interrupt pin 8 - button B - INT0
   bitClear(PCMSK0, PCINT6); //disable interrupt pin 6 - button A - PCINT6
