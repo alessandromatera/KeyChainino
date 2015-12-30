@@ -1,5 +1,7 @@
 /*************************************************************************
  * JUMP GAME FOR KEYCHAININO www.keychainino.com
+ * 
+ * last Update 30/12/2015
  *
  * created by Alessandro Matera
  * ************************************************************************
@@ -56,10 +58,10 @@ unsigned int rocksCounter = 0;
 int rockXPosition = 6;
 byte rockHeight = 1;
 
-byte rockUpdatePositionCounter = 0; //it is a counter to update ball position
-byte rockUpdatePositionCONSTANT = 12; //this number is directly proportional to the speed of the ball
+byte rockUpdatePositionCounter = 0; //it is a counter to update rock position
+byte rockUpdatePositionCONSTANT = 12; //this number is directly proportional to the speed of the rock
 
-//the game score calculated in the number of collision between man and ball
+//the game score calculated in the number of rocks jumped
 byte score = 0; //0 //MAX 255 for byte
 
 bool gameStarted = false; //indicates if the game is started
@@ -161,9 +163,9 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
   cli(); //disable interrupt
   TCNT1 = 65405;
   //THIS PART IS USED TO UPDATE THE BALL'S MOVIMENT IN THE GAME
-  //if game is started change ball position
+  //if game is started change man position
   if (gameStarted) {
-    //it is a counter to update ball after counter reset becouse timer interrupt is to fast
+    //it is a counter to update rock after counter reset becouse timer interrupt is to fast
     rockUpdatePositionCounter++;
     if (rockUpdatePositionCounter > rockUpdatePositionCONSTANT) {
       //randomizzare rock
@@ -187,7 +189,7 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
         pinMode(pins[connectionMatrix[i][j][1]], OUTPUT); //set negative pole to OUTPUT
         digitalWrite(pins[connectionMatrix[i][j][0]], HIGH); //set positive pole to HIGH
         digitalWrite(pins[connectionMatrix[i][j][1]], LOW); //set negative pole to LOW
-        delayMicroseconds(500); //250
+        delayMicroseconds(400); //250
         pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
         pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
       }
@@ -453,8 +455,8 @@ void resetGame() {
   rockXPosition = 6;
   rockHeight = 1;
 
-  rockUpdatePositionCounter = 0; //it is a counter to update ball position
-  rockUpdatePositionCONSTANT = 12; //this number is directly proportional to the speed of the ball
+  rockUpdatePositionCounter = 0;
+  rockUpdatePositionCONSTANT = 12;
 
   score = 0;
   gameStarted = true;
