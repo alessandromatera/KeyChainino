@@ -9,7 +9,6 @@
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <avr/power.h>
-#include <avr/wdt.h>
 
 #define MATRIX_ROW 5
 #define MATRIX_COL 6
