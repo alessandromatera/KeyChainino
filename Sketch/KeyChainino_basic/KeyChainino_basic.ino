@@ -1,9 +1,9 @@
 /*************************************************************************
- * Basic Sketch - FOR KEYCHAININO www.keychainino.com
- *
- * created by Alessandro Matera 03/01/2016
+   Basic Sketch - FOR KEYCHAININO www.keychainino.com
+
+   created by Alessandro Matera 03/01/2016
  * ************************************************************************
- */
+*/
 
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
@@ -91,7 +91,7 @@ void setup() {
   TCCR1B = 0;    // set entire TCCR1B register to 0
 
   // enable Timer1 overflow interrupt:
-  TIMSK1 |= (1 << TOIE1);
+  bitSet(TIMSK1, TOIE1);
 
   // preload timer 65536 - (8000000 / 1024 / 60)
   TCNT1 = 65406;
