@@ -40,7 +40,7 @@ bool matrixState[MATRIX_ROW][MATRIX_COL] = { //the matrix that will be always us
 //MAN VARIABLES
 byte manXPosition = 2;//the position of the man
 
-byte keySensibility = 90; //the sensibility of the two touch buttons. Decrease to have more sensitivity
+byte keySensibility = 70; //the sensibility of the two touch buttons. Decrease to have more sensitivity
 
 
 ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine

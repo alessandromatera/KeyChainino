@@ -56,7 +56,7 @@ const byte wallSpeed = 15; //this number is directly proportional to the speed o
 byte wallUpdatePositionCounter = 0; //it is a counter to update wall position
 byte wallUpdatePositionSpeed = wallSpeed; //the actual speed of the wall
 
-byte keySensibility = 90; //the sensibility of the two touch buttons. Decrease to have more sensitivity
+byte keySensibility = 70; //the sensibility of the two touch buttons. Decrease to have more sensitivity
 
 //the game score calculated in the number of gates passed
 byte score = 0; //0 //MAX 255 for byte
@@ -170,7 +170,6 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
       updateWallPosition();
       wallUpdatePositionCounter = 0;
     }
-
   }
 
 
