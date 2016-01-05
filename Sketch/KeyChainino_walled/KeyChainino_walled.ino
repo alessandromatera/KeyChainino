@@ -48,11 +48,11 @@ bool matrixState[MATRIX_ROW][MATRIX_COL] = { //the matrix that will be always us
 byte manXPosition = 2;//the position of the man
 
 //Wall variables
-byte wallGateXPosition = random(0, MATRIX_COL); //randomized wall gate
+byte wallGateXPosition = random(0, MATRIX_COL); //randomized wall's gate
 byte wallYPosition = 0; //Y value of the wall
 unsigned int wallCounter = 0; //the number of walls spawned used to increase the speed
 
-const byte wallSpeed = 15; //this number is directly proportional to the speed of the wall
+const byte wallSpeed = 15; //this number is inversely proportional to the speed of the wall
 byte wallUpdatePositionCounter = 0; //it is a counter to update wall position
 byte wallUpdatePositionSpeed = wallSpeed; //the actual speed of the wall
 
@@ -163,7 +163,7 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
   //THIS PART IS USED TO UPDATE THE Wall'S MOVIMENT IN THE GAME
   //if game is started change wall position
   if (gameStarted) {
-    //it is a counter to update the wall position after the reset of this counter
+    //it is a counter used to update the wall position after it reach the wallUpdatePositionSpeed value
     //becouse timer interrupt is to fast
     wallUpdatePositionCounter++;
     if (wallUpdatePositionCounter > wallUpdatePositionSpeed) {
