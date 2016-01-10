@@ -1,16 +1,16 @@
 /*****************************************************************************
- * WALLED GAME FOR KEYCHAININO www.keychainino.com
- *
- * 30/12/2015
- *
- * created by Alessandro Matera
- *
- * naming by *Don Marco Furi*
- *
- * The goal of this game is to move the "man" (a dot) inside the walls's gates
- * that coming down from the top of the screen.
- *
- * The walls speed increase every 10 walls spawned *
+   WALLED GAME FOR KEYCHAININO www.keychainino.com
+
+   30/12/2015
+
+   created by Alessandro Matera
+
+   naming by *Don Marco Furi
+
+   The goal of this game is to move the "man" (a dot) inside the walls's gates
+   that coming down from the top of the screen.
+
+   The walls speed increase every 10 walls spawned
  * *****************************************************************************
 */
 
@@ -225,7 +225,7 @@ void setup() {
   TCCR1B = 0;    // set entire TCCR1A register to 0
 
   // enable Timer1 overflow interrupt:
-  TIMSK1 |= (1 << TOIE1);
+  bitSet(TIMSK1, TOIE1);
 
   // preload timer 65536 - (8000000 / 1024 / 60) = 60Hz
   TCNT1 = 65405;
@@ -361,7 +361,7 @@ void updateManPosition() {
     //delete current man Position
     matrixState[MATRIX_ROW - 1][manXPosition] = 0;
   }
-  
+
   //set current man position to new position
   manXPosition = manXNewPosition;
 
