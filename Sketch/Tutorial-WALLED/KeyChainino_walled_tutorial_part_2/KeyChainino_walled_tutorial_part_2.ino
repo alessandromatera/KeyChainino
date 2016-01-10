@@ -1,10 +1,10 @@
-/****************************************************************************
-   KeyChainino Walled Game TUTORIAL PART 1 - FOR KEYCHAININO www.keychainino.com
+/*******************************************************************************************************
+   KeyChainino Walled Game TUTORIAL PART 2 - FOR KEYCHAININO www.keychainino.com
 
-   learn more here: http://www.keychainino.com/tutorial-how-to-make-the-walled-game-step-by-step-part-1/
+   learn more here: http://www.keychainino.com/tutorial-how-to-make-the-walled-game-step-by-step-part-2/
 
    created by Alessandro Matera 03/01/2016
- * ************************************************************************
+ * *******************************************************************************************************
 */
 
 #include <avr/interrupt.h>
