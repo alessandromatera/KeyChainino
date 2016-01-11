@@ -284,6 +284,8 @@ void updateWallPosition() {
 
   //checkCollision
   if (wallYPosition == MATRIX_ROW - 2) { //if wall is in the same man's Y position
+    //NOTE: we check if the wallYposition is in the position MATRIX_ROW - 2 and
+    // not on MATRIX_ROW - 1 because we increment the wallYPosition after this check
     if (manXPosition == wallGateXPosition) { //if man passes the wall
       score++; //increase score
     } else {
