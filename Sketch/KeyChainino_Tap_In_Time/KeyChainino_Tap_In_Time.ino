@@ -1,5 +1,5 @@
 /***************************************************************************/
-/** TAP IN TIME v1.0 - Sketch for KEYCHAININO -  www.keychainino.com *******/
+/** TAP IN TIME v1.2 - Sketch for KEYCHAININO -  www.keychainino.com *******/
 /***************************************************************************/
 /***************************************************************************/
 /***** created by Riccardo Michele Licciardello - 10/01/2016****************/
@@ -8,6 +8,18 @@
    random falling notes arrive in the last line of the led matrix. When a button
    is correctly pushed, the score increase and a coloumn led lights.
    If the button isn't pushed or the button is pushed in wrong time, the game ends.
+
+  /*Changelog TAP IN TIME v1.2
+     -Improve gameplay
+     -Minor optimizations in animation
+*/
+
+/*Changelog TAP IN TIME v1.1
+   -Bug fix when a button is pressed, now the game is more accurate with falling note
+   -New animations and texts
+   -Added 3 life. Now you can wrong 3 times!
+   -Added record, max point you have achieved in game. *NOTE: if you remove battery in keychainino, record will be erased!
+   -More optimizations
 */
 
 
@@ -24,22 +36,27 @@
 #define BUTTON_B 8 //pin 8 - INT0
 
 byte punteggio = 0;     //variable score
-byte punteggioOLD = 0;  //variable for OLD score, used to indicate the end of falling notes
+byte record = 0;        //variable record, max point achieved in game
 byte punteggioVEL = 0;  //variable used to control velocity of falling notes
 byte YnotaSX = 0;       //Y position of left note
 byte YnotaDX = 0;       //Y position of right note
-byte velocitaNota = 12; //initial velocity of falling notes
+byte velocitaNota = 10; //initial velocity of falling notes
 byte timerNotaDX = 0;   //timer used to right notes
 byte timerNotaSX = 0;   //timer used to left notes
 byte NotaRandom;        //falling note (it's random: left or right)
+byte vite = 2;          //variable life
 boolean FlagNotaSX = 0; //flag that indicate left note is falling
 boolean FlagNotaDX = 0; //flag that indicate right note is falling
 boolean FlagFineNota = 0; //flag that indicate the end of falling note (when we have to push button)
 boolean FlagFineGioco = 0; //flag end of game
 boolean FlagPulsanteDX = 0; //flag that indicate the right button was pushed
 boolean FlagPulsanteSX = 0; //flag that indicate the left button was pushed
+boolean FlagAbilitaPunti = 0; //flag that indicate the possibility of update score
 
-char phrase[] = "TAP IN TIME ";   //Scrolling text at start
+char titolo[] = "TAP IN TIME ";   //Scrolling text at start
+char vite2[] = "2 LIFES ";        //Scrolling text when i lost first life
+char vita1[] = "1 LIFE ";         //Scrolling text when i lost second life
+char Punti[12];                   //Final text with score
 
 
 const byte pins[PIN_NUMBER] = {0, 1, 2, 3, 7, 9, 10}; //the number of the pin used for the LEDs in ordered
@@ -186,6 +203,22 @@ const PROGMEM bool I[MATRIX_ROW][MATRIX_COL] = {
   {0, 0, 0, 1, 0, 0}
 };
 
+const PROGMEM bool F[MATRIX_ROW][MATRIX_COL] = {
+  {0, 1, 1, 1, 1, 0},
+  {0, 1, 0, 0, 0, 0},
+  {0, 1, 1, 1, 0, 0},
+  {0, 1, 0, 0, 0, 0},
+  {0, 1, 0, 0, 0, 0}
+};
+
+const PROGMEM bool L[MATRIX_ROW][MATRIX_COL] = {
+  {0, 1, 0, 0, 0, 0},
+  {0, 1, 0, 0, 0, 0},
+  {0, 1, 0, 0, 0, 0},
+  {0, 1, 0, 0, 0, 0},
+  {0, 1, 1, 1, 1, 0}
+};
+
 const PROGMEM bool N[MATRIX_ROW][MATRIX_COL] = {
   {0, 1, 0, 0, 1, 0},
   {0, 1, 1, 0, 1, 0},
@@ -210,6 +243,53 @@ const PROGMEM bool E[MATRIX_ROW][MATRIX_COL] = {
   {0, 1, 1, 1, 0, 0}
 };
 
+const PROGMEM bool S[MATRIX_ROW][MATRIX_COL] = {
+  {0, 0, 1, 1, 1, 0},
+  {0, 1, 0, 0, 0, 0},
+  {0, 0, 1, 1, 0, 0},
+  {0, 0, 0, 0, 1, 0},
+  {0, 1, 1, 1, 0, 0}
+};
+
+const PROGMEM bool O[MATRIX_ROW][MATRIX_COL] = {
+  {0, 0, 1, 1, 0, 0},
+  {0, 1, 0, 0, 1, 0},
+  {0, 1, 0, 0, 1, 0},
+  {0, 1, 0, 0, 1, 0},
+  {0, 0, 1, 1, 0, 0}
+};
+
+const PROGMEM bool C[MATRIX_ROW][MATRIX_COL] = {
+  {0, 0, 0, 1, 1, 0},
+  {0, 0, 1, 0, 0, 0},
+  {0, 0, 1, 0, 0, 0},
+  {0, 0, 1, 0, 0, 0},
+  {0, 0, 0, 1, 1, 0}
+};
+
+const PROGMEM bool D[MATRIX_ROW][MATRIX_COL] = {
+  {0, 1, 1, 1, 0, 0},
+  {0, 1, 0, 0, 1, 0},
+  {0, 1, 0, 0, 1, 0},
+  {0, 1, 0, 0, 1, 0},
+  {0, 1, 1, 1, 0, 0}
+};
+
+const PROGMEM bool R[MATRIX_ROW][MATRIX_COL] = {
+  {0, 1, 1, 1, 0, 0},
+  {0, 1, 0, 0, 1, 0},
+  {0, 1, 1, 1, 0, 0},
+  {0, 1, 0, 1, 0, 0},
+  {0, 1, 0, 0, 1, 0}
+};
+
+const PROGMEM bool duepunti[MATRIX_ROW][MATRIX_COL] = {
+  {0, 0, 0, 0, 0, 0},
+  {0, 1, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0},
+  {0, 1, 0, 0, 0, 0}
+};
 /********************************************/
 /************SAD FACE************************/
 /********************************************/
@@ -231,8 +311,10 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
   TCNT1 = 65406;
 
   if (FlagFineGioco == 0) //if game isn't finished
+  {
     DiscesaNote();      //start generate falling notes
-
+    ControlloPulsanti();    //routine that control if the button is pushed
+  }
   // THIS PART IS USED TO UPDATE THE CHARLIEPLEXING LEDS MATRIX
   // YOU CAN JUST DON'T CARE ABOUT THIS PART
   // BECAUSE YOU CAN CODE LIKE A STANDARD MATRIX BY MANIPULATING THE
@@ -260,7 +342,6 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
       }
     }
   }
-  ControlloPulsanti();    //routine that control if the button is pushed
   sei(); //enable interrupt
 
 }
@@ -309,10 +390,9 @@ void setup() {
   sei();
   FlagFineNota = 0;
   FlagFineGioco = 1;
-  TitoloGioco();    //At start, a scrolling text appear (title of game)
+  MostraTesto(titolo, 80);    //At start, a scrolling text appear (title of game)
   clearMatrix();
   AnimazioneAvvio();    //A little animation before the start of game
-  clearMatrix(); //clear the Matrix
   FlagFineGioco = 0;  //Game started
 }
 
@@ -341,33 +421,6 @@ void fullMatrix()
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
       matrixState[i][j] = 1;
-    }
-  }
-}
-
-void showScore(byte scoreNumber) { //show score with scrolling text
-
-  clearMatrix();
-
-  char scoreChar[5]; //char were to put the score number
-
-  //converting the score to scoreChar
-  String str = String(scoreNumber) + ' ';
-  str.toCharArray(scoreChar, 5);
-
-  for (char c = 0; scoreChar[c] != '\0'; c++) {
-    for (int col = MATRIX_COL - 1; col >= 0; col--) { // we start to display the charter matrix from right to left
-      for (byte i = 0; i < MATRIX_COL; i++) { //put the charter into the matrixState
-        for (byte j = 0; j < MATRIX_ROW; j++) { //as usual
-          if (i >= col) { //if the number of col(i) is higher than the scrolling col, we show the correct charter according to charterToShow var.
-            writeCharter(scoreChar[c], i, j, col);
-          } else { //else, if col (i) is less than col, we shift the matrixState
-            matrixState[j][i] = matrixState[j][i + 1];
-          }
-        }
-
-      }
-      delay(150);
     }
   }
 }
@@ -429,6 +482,30 @@ void writeCharter(char charterToShow, byte i, byte j, byte col) {
   else if (charterToShow == 'A') {
     matrixState[j][i] = (bool*)pgm_read_byte(&(A[j][i - col]));
   }
+  else if (charterToShow == 'L') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(L[j][i - col]));
+  }
+  else if (charterToShow == 'F') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(F[j][i - col]));
+  }
+  else if (charterToShow == 'S') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(S[j][i - col]));
+  }
+  else if (charterToShow == 'O') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(O[j][i - col]));
+  }
+  else if (charterToShow == 'R') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(R[j][i - col]));
+  }
+  else if (charterToShow == 'C') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(C[j][i - col]));
+  }
+  else if (charterToShow == 'D') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(D[j][i - col]));
+  }
+  else if (charterToShow == ':') {
+    matrixState[j][i] = (bool*)pgm_read_byte(&(duepunti[j][i - col]));
+  }
 }
 
 
@@ -452,11 +529,12 @@ void goSleep() {
 
 
 /***************************************************/
-/******ROUTINE AT THE BEGINNING OF THE GAME*********/
+/**************ROUTINE THAT SHOW TEXTS**************/
 /***************************************************/
 
-void TitoloGioco() //Show title of game when the game started - "TAP IN TIME"
+void MostraTesto(char phrase[], int ritardo) //Show texts according the array and the "delay time" passed
 {
+  clearMatrix();
   for (char c = 0; phrase[c] != '\0'; c++)
   {
     for (int col = MATRIX_COL - 1; col >= 0; col--) // we start to display the charter matrix from right to left
@@ -479,44 +557,45 @@ void TitoloGioco() //Show title of game when the game started - "TAP IN TIME"
       delay(50);
     }
   }
-  delay(100);
+  delay(ritardo);
 }
 
 
 void AnimazioneAvvio()  //Show little animation before the game starts
 {
-  delay(80);
+  delay(60);
   matrixState[0][2] = 1;
   matrixState[0][3] = 1;
-  delay(90);
+  delay(70);
   matrixState[0][1] = 1;
   matrixState[0][4] = 1;
-  delay(90);
+  delay(70);
   matrixState[0][0] = 1;
   matrixState[0][5] = 1;
-  delay(90);
+  delay(70);
   matrixState[1][0] = 1;
   matrixState[1][5] = 1;
-  delay(90);
+  delay(70);
   matrixState[2][0] = 1;
   matrixState[2][5] = 1;
-  delay(120);
+  delay(90);
   matrixState[3][0] = 1;
   matrixState[3][5] = 1;
-  delay(120);
+  delay(90);
   matrixState[4][0] = 1;
   matrixState[4][5] = 1;
-  delay(120);
+  delay(90);
   matrixState[0][2] = 0;
   matrixState[0][3] = 0;
   matrixState[4][1] = 1;
   matrixState[4][4] = 1;
-  delay(120);
+  delay(90);
   matrixState[0][1] = 0;
   matrixState[0][4] = 0;
   matrixState[4][2] = 1;
   matrixState[4][3] = 1;
   delay(300);
+  clearMatrix();
 }
 
 /*************************************************/
@@ -528,12 +607,9 @@ void PremiPulsanti()
 {
   if (!digitalRead(BUTTON_B)) //test right button
   {
-    delay(80);
+    delay(50);
     if (!digitalRead(BUTTON_B))
-    {
-      delay(80);
       FlagPulsanteDX = 1; //flag right button is pushed
-    }
   }
   else
   {
@@ -543,12 +619,9 @@ void PremiPulsanti()
 
   if (!digitalRead(BUTTON_A)) //test left button
   {
-    delay(80);
+    delay(50);
     if (!digitalRead(BUTTON_A))
-    {
-      delay(80);
       FlagPulsanteSX = 1; //flag left button is pushed
-    }
   }
   else
   {
@@ -563,12 +636,11 @@ void ControlloPulsanti()
 
   if (FlagPulsanteDX == 1)
   {
-    if (YnotaDX == 5) //if Y position of right falling note is 5 (in the last line of matrix led)
-    {
+    if (((YnotaDX == 5) || (YnotaDX == 0)) && (YnotaSX == 0)) //if Y position of right falling note is 5 or 0 (in the last line of matrix led)
+    { //and left note is clear
       FlagPulsanteDX = 0;
       MostraRispostaDX(); //lights right coloumn of led
-      punteggio++;    //increase score
-      punteggioVEL++;   //increase temporaly score for boost velocity
+      AumentaPunteggio(); //update score
     }
     else
       FlagFineGioco = 1; //if button was pushed at wrong time, the game ends
@@ -576,29 +648,58 @@ void ControlloPulsanti()
 
   if (FlagPulsanteSX == 1)
   {
-    if (YnotaSX == 5) //same things with left side
+    if (((YnotaSX == 5) || (YnotaSX == 0)) && (YnotaDX == 0)) //same things with left side
     {
       FlagPulsanteSX = 0;
       MostraRispostaSX();
-      punteggio++;
-      punteggioVEL++;
+      AumentaPunteggio();
     }
     else
       FlagFineGioco = 1;
   }
 }
 
+//routine that update score
+void AumentaPunteggio()
+{
+  if (FlagAbilitaPunti == 1)
+  {
+    FlagFineNota = 0;
+    FlagAbilitaPunti = 0; //disable possibility of updating again score
+    punteggio++;    //increase score
+    punteggioVEL++;   //increase temporaly score for boost velocity
+  }
+}
+
 //Lights left coloumn of led
 void MostraRispostaSX()
 {
-  for (byte i = 0; i < MATRIX_ROW; i++)
+  byte visual;
+
+  if (vite == 2)  //test how many life left. They will change animation
+    visual = 0; //when a button is pressed
+  else if (vite == 1)
+    visual = 1;
+  else if (vite == 0)
+    visual = 3;
+
+  for (byte i = visual; i < MATRIX_ROW; i++)
     matrixState[i][0] = 1;
 }
 
 //Lights right coloumn of led
 void MostraRispostaDX()
 {
-  for (byte i = 0; i < MATRIX_ROW; i++)
+  byte visual;
+
+  if (vite == 2)  //test how many life left. They will change animation
+    visual = 0;   //when a button is pressed
+  else if (vite == 1)
+    visual = 1;
+  else if (vite == 0)
+    visual = 3;
+
+  for (byte i = visual; i < MATRIX_ROW; i++)
     matrixState[i][5] = 1;
 }
 
@@ -640,11 +741,6 @@ void DiscesaNote()
   if (FlagNotaDX == 1) //if flag right note is 1, generate right note
     CompareNotaDX();
 
-  if ((FlagFineNota == 1) && (punteggioOLD < punteggio)) //if the note has fallen and the score was increased
-  {
-    FlagFineNota = 0;     //clear flag end note
-    punteggioOLD = punteggio;
-  }
 }
 
 //Generate left note
@@ -665,7 +761,10 @@ void CompareNotaSX()
       matrixState[YnotaSX][2] = 1;
       YnotaSX++;
       if (YnotaSX == 4) //when note is in the end of matrix, set flag end note
+      {
         FlagFineNota = 1;
+        FlagAbilitaPunti = 1; //and set the possibility of updating score
+      }
     }
     else
     {
@@ -698,7 +797,10 @@ void CompareNotaDX()
       matrixState[YnotaDX][4] = 1;
       YnotaDX++;
       if (YnotaDX == 4)
+      {
         FlagFineNota = 1;
+        FlagAbilitaPunti = 1;
+      }
     }
     else
     {
@@ -711,6 +813,7 @@ void CompareNotaDX()
   else
     timerNotaDX++;
 }
+
 
 //Routine boost velocity
 void ControlloVelocita()
@@ -730,15 +833,55 @@ void ControlloVelocita()
 //if flag end game is set, this routine will be performed
 void FineGioco()
 {
-  fullMatrix();
-  delay(100);
-  showScore(punteggio); //show the score achieved
-  delay(200);
-  MostraKeyChaininoFacciaTriste();    //show a sad face
-  delay(600);
-  goSleep();    //sleep Keychainino
-  ResettaGioco();   //set variable to default values
+  if (vite > 0) //if you have life
+  {
+    fullMatrix();
+    delay(100);
+    if (vite == 2)  //show life remain
+      MostraTesto(vite2, 50);
+    else
+      MostraTesto(vita1, 50);
+
+    vite--;
+    FlagFineGioco = 0;
+    FlagAbilitaPunti = 0;
+    FlagFineNota = 0;
+    timerNotaDX = 0;
+    timerNotaSX = 0;
+    FlagPulsanteDX = 0;
+    FlagPulsanteSX = 0;
+    YnotaDX = 0;
+    YnotaSX = 0;
+  }
+  else    //if you haven't life, end game
+  {
+    fullMatrix();
+    delay(100);
+    String temp = String(punteggio);
+    String temp2 = "POINTS:" + temp + " ";
+    temp2.toCharArray(Punti, 12);   //merge score number with text "POINTS"
+    MostraTesto(Punti, 150);        //Show the result
+    delay(100);
+    MostraRecord();
+    delay(100);
+    MostraKeyChaininoFacciaTriste();    //show a sad face
+    delay(700);
+    goSleep();    //sleep Keychainino
+    ResettaGioco();   //set variable to default values
+  }
 }
+
+//Routine that shows record point and update it
+void MostraRecord()
+{
+  if (punteggio > record)
+    record = punteggio;
+  String temp = String(record);
+  String temp2 = "RECORD:" + temp + " ";
+  temp2.toCharArray(Punti, 12);   //merge score number with text "POINTS"
+  MostraTesto (Punti, 150);
+}
+
 
 //Show a sad face
 void MostraKeyChaininoFacciaTriste() {
@@ -757,11 +900,10 @@ void ResettaGioco()
   clearMatrix();
   delay(300);
   punteggio = 0;
-  punteggioOLD = 0;
   punteggioVEL = 0;
   YnotaSX = 0;
   YnotaDX = 0;
-  velocitaNota = 12;
+  velocitaNota = 10;
   timerNotaDX = 0;
   timerNotaSX = 0;
   FlagNotaSX = 0;
@@ -769,12 +911,12 @@ void ResettaGioco()
   FlagFineNota = 0;
   FlagPulsanteDX = 0;
   FlagPulsanteSX = 0;
+  FlagAbilitaPunti = 0;
+  vite = 2;
   sei();
   FlagFineGioco = 1;
-  TitoloGioco();
-  clearMatrix();
+  MostraTesto(titolo, 80);
   AnimazioneAvvio();
-  clearMatrix();
   FlagFineGioco = 0;
 }
 
