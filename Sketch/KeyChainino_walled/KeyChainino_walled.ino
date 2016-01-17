@@ -5,7 +5,7 @@
 
    created by Alessandro Matera
 
-   naming by *Don Marco Furi
+   naming by *Don Marco Furi*
 
    The goal of this game is to move the "man" (a dot) inside the walls's gates
    that coming down from the top of the screen.
