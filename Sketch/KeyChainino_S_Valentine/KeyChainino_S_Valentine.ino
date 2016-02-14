@@ -474,7 +474,7 @@ void writeCharter(char charterToShow, byte i, byte j, byte col) {
   else if (charterToShow == ' ') { //SYMBOLS FOR SPACE
     matrixState[j][i] = 0;
   }
-  else if (charterToShow == '\'') { //SYMBOLS FOR SPACE
+  else if (charterToShow == '\'') { //SYMBOLS FOR QUOTE
     matrixState[j][i] = (bool*)pgm_read_byte(&(QUOTE[j][i - col]));
   }
 
