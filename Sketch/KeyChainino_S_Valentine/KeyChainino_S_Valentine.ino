@@ -1,5 +1,5 @@
 /*************************************************************************
-   SCROLLING YOUR NAME - FOR KEYCHAININO www.keychainino.com
+   HAPPY VALENTINE'S DAY - FOR KEYCHAININO www.keychainino.com
 
    created by Alessandro Matera
  * ************************************************************************
