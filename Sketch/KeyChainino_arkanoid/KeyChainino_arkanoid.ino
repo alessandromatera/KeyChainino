@@ -194,7 +194,7 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
         pinMode(pins[connectionMatrix[i][j][1]], OUTPUT); //set negative pole to OUTPUT
         digitalWrite(pins[connectionMatrix[i][j][0]], HIGH); //set positive pole to HIGH
         digitalWrite(pins[connectionMatrix[i][j][1]], LOW); //set negative pole to LOW
-        delayMicroseconds(500); //250
+        delayMicroseconds(250); //250
         pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
         pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
       }
