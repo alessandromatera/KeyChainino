@@ -70,7 +70,7 @@ byte foodUpdateFlashingCounter = 0;
 byte foodBlink = true;
 
 //the game score calculated in the number of food eaten
-byte score = 0; //MAX 255 for byte
+int score = 0; //MAX 255 for byte
 
 bool gameStarted = false; //indicates if the game is started
 
@@ -127,11 +127,11 @@ const PROGMEM bool five[MATRIX_ROW][MATRIX_COL] = {
 };
 
 const PROGMEM bool six[MATRIX_ROW][MATRIX_COL] = {
-  {0, 0, 0, 1, 1, 0},
+  {0, 0, 0, 1, 0, 0},
   {0, 0, 1, 0, 0, 0},
-  {0, 0, 1, 1, 1, 0},
-  {0, 0, 1, 0, 1, 0},
-  {0, 0, 1, 1, 1, 0}
+  {0, 1, 1, 1, 0, 0},
+  {0, 1, 0, 0, 1, 0},
+  {0, 0, 1, 1, 0, 0}
 };
 
 const PROGMEM bool seven[MATRIX_ROW][MATRIX_COL] = {
@@ -165,7 +165,6 @@ const PROGMEM bool zero[MATRIX_ROW][MATRIX_COL] = {
   {0, 1, 0, 0, 1, 0},
   {0, 0, 1, 1, 0, 0}
 };
-
 
 
 ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine

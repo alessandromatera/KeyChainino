@@ -59,7 +59,7 @@ byte wallUpdatePositionSpeed = wallSpeed; //the actual speed of the wall
 byte keySensibility = 70; //the sensibility of the two touch buttons. Decrease to have more sensitivity
 
 //the game score calculated in the number of gates passed
-byte score = 0; //0 //MAX 255 for byte
+int score = 0;
 
 bool gameStarted = false; //indicates if the game is started
 
@@ -115,11 +115,11 @@ const PROGMEM bool five[MATRIX_ROW][MATRIX_COL] = {
 };
 
 const PROGMEM bool six[MATRIX_ROW][MATRIX_COL] = {
-  {0, 0, 0, 1, 1, 0},
+  {0, 0, 0, 1, 0, 0},
   {0, 0, 1, 0, 0, 0},
-  {0, 0, 1, 1, 1, 0},
-  {0, 0, 1, 0, 1, 0},
-  {0, 0, 1, 1, 1, 0}
+  {0, 1, 1, 1, 0, 0},
+  {0, 1, 0, 0, 1, 0},
+  {0, 0, 1, 1, 0, 0}
 };
 
 const PROGMEM bool seven[MATRIX_ROW][MATRIX_COL] = {

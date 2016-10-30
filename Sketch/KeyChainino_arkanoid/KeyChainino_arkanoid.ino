@@ -67,7 +67,7 @@ byte ballUpdatePositionCounter = 0; //it is a counter to update ball position
 const byte ballUpdatePositionCONSTANT = 12; //this number is directly proportional to the speed of the ball
 
 //the game score calculated in the number of collision between bar and ball
-byte score = 0; //0 //MAX 255 for byte
+int score = 0; 
 
 bool gameStarted = false; //indicates if the game is started
 
@@ -91,19 +91,19 @@ const PROGMEM bool one[MATRIX_ROW][MATRIX_COL]  = {
 };
 
 const PROGMEM bool two[MATRIX_ROW][MATRIX_COL] = {
-  {0, 0, 0, 1, 0, 0},
-  {0, 0, 1, 0, 1, 0},
+  {0, 0, 1, 1, 0, 0},
   {0, 0, 0, 0, 1, 0},
   {0, 0, 0, 1, 0, 0},
+  {0, 0, 1, 0, 0, 0},
   {0, 0, 1, 1, 1, 0}
 };
 
 const PROGMEM bool three[MATRIX_ROW][MATRIX_COL] = {
-  {0, 0, 1, 1, 1, 0},
+  {0, 0, 1, 1, 0, 0},
   {0, 0, 0, 0, 1, 0},
-  {0, 0, 0, 1, 1, 0},
+  {0, 0, 0, 1, 0, 0},
   {0, 0, 0, 0, 1, 0},
-  {0, 0, 1, 1, 1, 0}
+  {0, 0, 1, 1, 0, 0}
 };
 
 const PROGMEM bool four[MATRIX_ROW][MATRIX_COL] = {
@@ -123,10 +123,10 @@ const PROGMEM bool five[MATRIX_ROW][MATRIX_COL] = {
 };
 
 const PROGMEM bool six[MATRIX_ROW][MATRIX_COL] = {
-  {0, 0, 0, 1, 1, 0},
+  {0, 0, 0, 1, 0, 0},
   {0, 0, 1, 0, 0, 0},
-  {0, 0, 1, 1, 0, 0},
-  {0, 0, 1, 0, 1, 0},
+  {0, 1, 1, 1, 0, 0},
+  {0, 1, 0, 0, 1, 0},
   {0, 0, 1, 1, 0, 0}
 };
 
@@ -155,11 +155,11 @@ const PROGMEM bool nine[MATRIX_ROW][MATRIX_COL] = {
 };
 
 const PROGMEM bool zero[MATRIX_ROW][MATRIX_COL] = {
-  {0, 1, 1, 1, 1, 0},
+  {0, 0, 1, 1, 0, 0},
   {0, 1, 0, 0, 1, 0},
   {0, 1, 0, 0, 1, 0},
   {0, 1, 0, 0, 1, 0},
-  {0, 1, 1, 1, 1, 0}
+  {0, 0, 1, 1, 0, 0}
 };
 
 
