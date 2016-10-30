@@ -1,17 +1,8 @@
-/*****************************************************************************
-   WALLED GAME FOR KEYCHAININO www.keychainino.com
+/*************************************************************************
+   Basic Sketch - FOR KEYCHAININO www.keychainino.com
 
-   30/12/2015
-
-   created by Alessandro Matera
-
-   naming by *Don Marco Furi*
-
-   The goal of this game is to move the "man" (a dot) inside the walls's gates
-   that coming down from the top of the screen.
-
-   The walls speed increase every 10 walls spawned
- * *****************************************************************************
+   created by Alessandro Matera 03/01/2016
+ * ************************************************************************
 */
 
 #include <avr/interrupt.h>
@@ -28,7 +19,7 @@
 
 const byte pins[PIN_NUMBER] = {0, 1, 2, 3, 7, 9, 10}; //the number of the pin used for the LEDs in ordered
 
-const byte connectionMatrix[MATRIX_ROW][MATRIX_COL][2] = { //the matrix that shows the LEDs pin connections. First Value is the Anode, second is the Cathode
+const byte connectionMatrix[MATRIX_ROW][MATRIX_COL][2] = { //the matrix that shows the LEDs pin connections. First Value is the Anode, second is the Catode
   {{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}},
   {{0, 1}, {2, 1}, {3, 1}, {4, 1}, {5, 1}, {6, 1}},
   {{0, 2}, {1, 2}, {3, 2}, {4, 2}, {5, 2}, {6, 2}},
@@ -42,34 +33,6 @@ bool matrixState[MATRIX_ROW][MATRIX_COL] = { //the matrix that will be always us
   {0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0}
-};
-
-//MAN VARIABLES
-byte manXPosition = 2;//the position of the man
-
-//Wall variables
-byte wallGateXPosition = random(0, MATRIX_COL); //randomized wall's gate
-byte wallYPosition = 0; //Y value of the wall
-unsigned int wallCounter = 0; //the number of walls spawned used to increase the speed
-
-const byte wallSpeed = 15; //this number is inversely proportional to the speed of the wall
-byte wallUpdatePositionCounter = 0; //it is a counter to update wall position
-byte wallUpdatePositionSpeed = wallSpeed; //the actual speed of the wall
-
-byte keySensibility = 70; //the sensibility of the two touch buttons. Decrease to have more sensitivity
-
-//the game score calculated in the number of gates passed
-byte score = 0; //0 //MAX 255 for byte
-
-bool gameStarted = false; //indicates if the game is started
-
-//KeyChainino Face stored in FLASH in order to reduce RAM size
-const PROGMEM bool KeyChaininoFace[MATRIX_ROW][MATRIX_COL] = {
-  {0, 0, 0, 0, 0, 0},
-  {0, 0, 1, 1, 0, 0},
-  {0, 0, 0, 0, 0, 0},
-  {1, 0, 0, 0, 0, 1},
-  {0, 1, 1, 1, 1, 0}
 };
 
 //NUMBERS used in score stored in FLASH in order to reduce RAM size
@@ -155,23 +118,9 @@ const PROGMEM bool zero[MATRIX_ROW][MATRIX_COL] = {
 };
 
 
-
 ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
   cli(); //disable interrupt
-  TCNT1 = 65405;
-
-  //THIS PART IS USED TO UPDATE THE Wall'S MOVIMENT IN THE GAME
-  //if game is started change wall position
-  if (gameStarted) {
-    //it is a counter used to update the wall position after it reach the wallUpdatePositionSpeed value
-    //becouse timer interrupt is to fast
-    wallUpdatePositionCounter++;
-    if (wallUpdatePositionCounter > wallUpdatePositionSpeed) {
-      updateWallPosition();
-      wallUpdatePositionCounter = 0;
-    }
-  }
-
+  TCNT1 = 65406;
 
   // THIS PART IS USED TO UPDATE THE CHARLIEPLEXING LEDS MATRIX
   // YOU CAN JUST DON'T CARE ABOUT THIS PART
@@ -186,7 +135,7 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
         pinMode(pins[connectionMatrix[i][j][1]], OUTPUT); //set negative pole to OUTPUT
         digitalWrite(pins[connectionMatrix[i][j][0]], HIGH); //set positive pole to HIGH
         digitalWrite(pins[connectionMatrix[i][j][1]], LOW); //set negative pole to LOW
-        delayMicroseconds(250); //250
+        delayMicroseconds(250);
         pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
         pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
       }
@@ -208,7 +157,6 @@ ISR(INT0_vect) { //BUTTON B INTERRUPT
 }
 
 
-
 void setup() {
   //configure LED pins
   for (byte i = 0; i < PIN_NUMBER; i++) {
@@ -222,13 +170,13 @@ void setup() {
   // initialize Timer1
   cli();         // disable global interrupts
   TCCR1A = 0;    // set entire TCCR1A register to 0
-  TCCR1B = 0;    // set entire TCCR1A register to 0
+  TCCR1B = 0;    // set entire TCCR1B register to 0
 
   // enable Timer1 overflow interrupt:
   bitSet(TIMSK1, TOIE1);
 
-  // preload timer 65536 - (8000000 / 1024 / 60) = 60Hz
-  TCNT1 = 65405;
+  // preload timer 65536 - (8000000 / 1024 / 60)
+  TCNT1 = 65406;
 
   // set 1024 prescaler
   bitSet(TCCR1B, CS12);
@@ -237,142 +185,40 @@ void setup() {
   bitSet(GIMSK, PCIE0); //enable pingChange global interrupt
 
   //disabling all unnecessary peripherals to reduce power
-  ADCSRA &= ~bit(ADEN); //disable ADC
-  power_adc_disable(); // disable ADC converter
+  //ADCSRA &= ~bit(ADEN); //disable ADC
+  //power_adc_disable(); // disable ADC converter
   power_usi_disable(); // disable USI
   // enable global interrupts:
   sei();
 
-  showKeyChaininoFace(); //show KeyChainino smile face
-  delay(500);
   clearMatrix(); //clear the Matrix
-
-  //show wall
-  for (byte x = 0; x < MATRIX_COL; x++) {
-    if (x != wallGateXPosition) {
-      matrixState[wallYPosition][x] = 1;
-    }
-  }
-
-  gameStarted = true; //Start the game
 
 }
 
 void loop() {
-  if (gameStarted) { //if game is started
-    game(); //go to game function
-  } else { //else end the game
-    endGame(); //to to end game
+  showAnalog(analogRead(A5)); //MISO, First ISP pin
+  //goSleep();
+}
+
+void clearMatrix() {
+  //clear the matrix by inserting 0 to the matrixState
+  for (byte i = 0; i < MATRIX_ROW; i++) {
+    for (byte j = 0; j < MATRIX_COL; j++) {
+      matrixState[i][j] = 0;
+    }
   }
 }
 
-void game() {
-  updateManPosition(); //update the man position by checking buttons
+void fullMatrix() {
+  //turn on all LEDs in the matrix by inserting 1 to the matrixState
+  for (byte i = 0; i < MATRIX_ROW; i++) {
+    for (byte j = 0; j < MATRIX_COL; j++) {
+      matrixState[i][j] = 1;
+    }
+  }
 }
 
-void endGame() {
-  //SHOW SCORE
-  showScore(score); //shows the score number
-  clearMatrix(); //clear all the LEDs
-  showKeyChaininoFace(); //show KeyChaininoFace
-  delay(500);
-  goSleep(); //sleep to reduce power
-  resetGame(); //reset game variables
-}
-
-void updateWallPosition() {
-
-  //checkCollision
-  if (wallYPosition == MATRIX_ROW - 2) { //if wall is in the same man's Y position
-    //NOTE: we check if the wallYposition is in the position MATRIX_ROW - 2 and
-    // not on MATRIX_ROW - 1 because we increment the wallYPosition after this check
-    if (manXPosition == wallGateXPosition) { //if man passes the wall
-      score++; //increase score
-    } else {
-      gameStarted = false; //esle we end the game
-    }
-  }
-
-  int wallOldYPosition = wallYPosition; //store the old wall position
-
-  if (wallYPosition < MATRIX_ROW - 1) { //if wall position isn't the bottom
-    wallYPosition++; //increase Y position - go down
-  } else { //else, if the wall touch the bottom
-    wallYPosition = 0; //reset its position
-    wallGateXPosition = random(0, MATRIX_COL); //randomize another gate
-    wallCounter++; //increase wall counter
-    //increase wall spaw update
-    if (wallCounter % 10 == 0) { //if wallCounter is egual to 10
-      wallUpdatePositionSpeed--; //we can increase the speed of the wall
-      if (wallUpdatePositionSpeed < 7) { //by decreasing the wallUpdatePositionSpeed variable
-        wallUpdatePositionSpeed = 7; //if this variable is under 7, we stay at this speed.
-      }
-    }
-  }
-
-  //delete previous wall position
-  for (byte x = 0; x < MATRIX_COL; x++) {
-    matrixState[wallOldYPosition][x] = 0;
-  }
-
-  //show new wall position
-  for (byte x = 0; x < MATRIX_COL; x++) {
-    if (x != wallGateXPosition) {
-      matrixState[wallYPosition][x] = 1;
-    }
-  }
-
-
-}
-
-void updateManPosition() {
-
-  //depends on which button is pressed, change the man position
-  // to left (button A) or right (button B)
-
-  int manXNewPosition = manXPosition; //store man X position that is going to change
-
-  //if we press the button B we go Right
-  if (!digitalRead(BUTTON_B)) {
-    delay(keySensibility);
-    if (!digitalRead(BUTTON_B)) {
-      manXNewPosition++;
-    }
-  }
-
-
-  //if we press the button A we go Left
-  if (!digitalRead(BUTTON_A)) {
-    delay(keySensibility);
-    if (!digitalRead(BUTTON_A)) {
-      manXNewPosition--;
-    }
-  }
-
-  //fix man X position
-  if (manXNewPosition > MATRIX_COL - 1) {
-    manXNewPosition--;
-  }
-  if (manXNewPosition < 0) {
-    manXNewPosition = 0;
-  }
-
-  //only if the man position is different
-  // (means that the button was pressed)
-  if (manXNewPosition != manXPosition) {
-    //delete current man Position
-    matrixState[MATRIX_ROW - 1][manXPosition] = 0;
-  }
-
-  //set current man position to new position
-  manXPosition = manXNewPosition;
-
-  //show new man Position
-  matrixState[MATRIX_ROW - 1][manXPosition] = 1;
-}
-
-
-void showScore(byte scoreNumber) {
+void showAnalog(int scoreNumber) {
 
   clearMatrix();
 
@@ -394,7 +240,7 @@ void showScore(byte scoreNumber) {
         }
 
       }
-      delay(150);
+      delay(100);
     }
   }
 }
@@ -436,65 +282,9 @@ void writeCharter(char charterToShow, byte i, byte j, byte col) {
   }
 }
 
-void resetGame() {
-  //reset all game variables to the start condition
-  clearMatrix();
-  showKeyChaininoFace();
-  delay(500);
-  clearMatrix();
-  delay(300);
-
-  manXPosition = 2;
-
-  wallGateXPosition = random(0, MATRIX_COL);
-  wallYPosition = 0; //top screen
-  wallCounter = 0; //the number of walls spawned
-
-  wallUpdatePositionCounter = 0;
-  wallUpdatePositionSpeed = wallSpeed;
-
-  score = 0;
-
-  //show wall
-  for (byte x = 0; x < MATRIX_COL; x++) {
-    if (x != wallGateXPosition) {
-      matrixState[wallYPosition][x] = 1;
-    }
-  }
-
-  gameStarted = true;
-}
-
-void clearMatrix() {
-  //clear the matrix by inserting 0 to the matrixState
-  for (byte i = 0; i < MATRIX_ROW; i++) {
-    for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 0;
-    }
-  }
-}
-
-void fullMatrix() {
-  //turn on all LEDs in the matrix by inserting 1 to the matrixState
-  for (byte i = 0; i < MATRIX_ROW; i++) {
-    for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 1;
-    }
-  }
-}
-
-void showKeyChaininoFace() {
-  for (byte i = 0; i < MATRIX_ROW; i++) {
-    for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = (bool*)pgm_read_byte(&(KeyChaininoFace[i][j])); //here we read the matrix from FLASH
-    }
-  }
-}
-
 
 void goSleep() {
   //going sleep to reduce power consuming
-
   //enable interrupt buttons to allow wakeup from button interrupts
   bitSet(GIMSK, INT0); //enable interrupt pin 8 - button B - INT0
   bitSet(PCMSK0, PCINT6); //enable interrupt pin 6 - button A - PCINT6
@@ -510,5 +300,4 @@ void goSleep() {
   power_timer0_enable(); //enable Timer 0
   power_timer1_enable(); //enable Timer 1
 }
-
 

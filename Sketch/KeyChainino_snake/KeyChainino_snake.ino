@@ -1,14 +1,15 @@
 /*************************************************************************
    SNAKE GAME FOR KEYCHAININO www.keychainino.com
 
-  The aim of the game is moving the snake around on the LED display trying to eat the food that blinks.
+  The aim of the game is moving the snake around the LED display trying to eat the food that blinks.
   Use the two buttons in order to change the snake's head direction clockwise or counter clockwise.
   Pay attention to the other snake's pieces:
-  Every two foods eaten, the snake increases itself! Don't eat yourself! :D
+  Every two foods eaten, the snake increases itself!
+  Don't eat yourself! :D
 
-   created by Alessandro Matera
+  created by Alessandro Matera
 
-   14/05/16
+  14/05/16
    
  * ************************************************************************
 */
