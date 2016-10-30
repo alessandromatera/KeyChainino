@@ -1,6 +1,8 @@
 /*************************************************************************
-   Basic Sketch - FOR KEYCHAININO www.keychainino.com
+   Analog Sketch - FOR KEYCHAININO www.keychainino.com
 
+   this sketch shows Analog read from pin A5 (MISO, First ISP pin)
+   
    created by Alessandro Matera 03/01/2016
  * ************************************************************************
 */
