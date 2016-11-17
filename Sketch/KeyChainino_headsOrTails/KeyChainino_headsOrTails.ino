@@ -1,7 +1,7 @@
 /*************************************************************************
-   Basic Sketch - FOR KEYCHAININO www.keychainino.com
+   Hears or Tails - FOR KEYCHAININO www.keychainino.com
 
-   created by Alessandro Matera 03/01/2016
+   created by Alessandro Matera 17/11/2016
  * ************************************************************************
 */
 
@@ -34,6 +34,57 @@ bool matrixState[MATRIX_ROW][MATRIX_COL] = { //the matrix that will be always us
   {0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0}
 };
+
+const PROGMEM bool KeyChaininoFace[MATRIX_ROW][MATRIX_COL] = {
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 1, 1, 0, 0},
+  {0, 0, 0, 0, 0, 0},
+  {1, 0, 0, 0, 0, 1},
+  {0, 1, 1, 1, 1, 0}
+};
+
+const PROGMEM bool Heads[MATRIX_ROW][MATRIX_COL] = {
+  {0, 0, 1, 1, 1, 0},
+  {0, 1, 1, 1, 1, 1},
+  {0, 1, 1, 1, 1, 1},
+  {0, 1, 1, 1, 1, 1},
+  {0, 0, 1, 1, 1, 0}
+};
+
+const PROGMEM bool Tails[MATRIX_ROW][MATRIX_COL] = {
+  {0, 1, 0, 0, 0, 1},
+  {0, 0, 1, 0, 1, 0},
+  {0, 0, 0, 1, 0, 0},
+  {0, 0, 1, 0, 1, 0},
+  {0, 1, 0, 0, 0, 1}
+};
+
+const byte MAX_ROTATION = 5;
+
+const PROGMEM bool Rotating_1[MATRIX_ROW][MATRIX_COL] = {
+  {0, 0, 1, 1, 1, 0},
+  {0, 0, 1, 1, 1, 0},
+  {0, 0, 1, 1, 1, 0},
+  {0, 0, 1, 1, 1, 0},
+  {0, 0, 1, 1, 1, 0}
+};
+
+const PROGMEM bool Rotating_2[MATRIX_ROW][MATRIX_COL] = {
+  {0, 0, 0, 1, 0, 0},
+  {0, 0, 0, 1, 0, 0},
+  {0, 0, 0, 1, 0, 0},
+  {0, 0, 0, 1, 0, 0},
+  {0, 0, 0, 1, 0, 0}
+};
+
+const PROGMEM bool Rotating_3[MATRIX_ROW][MATRIX_COL] = {
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0}
+};
+
 
 
 ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
@@ -114,8 +165,11 @@ void setup() {
 }
 
 void loop() {
-  //do something here
+  byte HeadsOrTails = random(0, 2);
+  showHeadsOrTails(HeadsOrTails);
 
+  showKeyChaininoFace();
+  delay(1000);
   goSleep();
 }
 
@@ -136,6 +190,84 @@ void fullMatrix() {
     }
   }
 }
+
+void showKeyChaininoFace() {
+  for (byte i = 0; i < MATRIX_ROW; i++) {
+    for (byte j = 0; j < MATRIX_COL; j++) {
+      matrixState[i][j] = (bool*)pgm_read_byte(&(KeyChaininoFace[i][j])); //here we read the matrix from FLASH
+    }
+  }
+}
+
+void showHeadsOrTails(byte HeadsOrTails) {
+  //little souspance
+
+  for (byte x = 0; x < 8; x++) {
+    for (byte rotation = 0; rotation < MAX_ROTATION; rotation++) {
+      for (byte i = 0; i < MATRIX_ROW; i++) {
+        for (byte j = 0; j < MATRIX_COL; j++) {
+          if (rotation == 0) {
+            matrixState[i][j] = (bool*)pgm_read_byte(&(Heads[i][j])); //here we read the matrix from FLASH
+          }
+          else if (rotation == 1) {
+            matrixState[i][j] = (bool*)pgm_read_byte(&(Rotating_1[i][j])); //here we read the matrix from FLASH
+          }
+          else if (rotation == 2) {
+            matrixState[i][j] = (bool*)pgm_read_byte(&(Rotating_2[i][j])); //here we read the matrix from FLASH
+          }
+          else if (rotation == 3) {
+            matrixState[i][j] = (bool*)pgm_read_byte(&(Rotating_3[i][j])); //here we read the matrix from FLASH
+          }
+          else if (rotation == 4) {
+            matrixState[i][j] = 0; //here we read the matrix from FLASH
+          }
+        }
+      }
+      delay(50);
+    }
+  }
+
+  for (byte x = 0; x < 2; x++) {
+    for (byte rotation = 0; rotation < MAX_ROTATION; rotation++) {
+      for (byte i = 0; i < MATRIX_ROW; i++) {
+        for (byte j = 0; j < MATRIX_COL; j++) {
+          if (rotation == 0) {
+            matrixState[i][j] = (bool*)pgm_read_byte(&(Heads[i][j])); //here we read the matrix from FLASH
+          }
+          else if (rotation == 1) {
+            matrixState[i][j] = (bool*)pgm_read_byte(&(Rotating_1[i][j])); //here we read the matrix from FLASH
+          }
+          else if (rotation == 2) {
+            matrixState[i][j] = (bool*)pgm_read_byte(&(Rotating_2[i][j])); //here we read the matrix from FLASH
+          }
+          else if (rotation == 3) {
+            matrixState[i][j] = (bool*)pgm_read_byte(&(Rotating_3[i][j])); //here we read the matrix from FLASH
+          }
+          else if (rotation == 4) {
+            matrixState[i][j] = 0; //here we read the matrix from FLASH
+          }
+        }
+      }
+      delay(100);
+    }
+  }
+
+  delay(200);
+
+  //Show Heads or Tails
+  for (byte i = 0; i < MATRIX_ROW; i++) {
+    for (byte j = 0; j < MATRIX_COL; j++) {
+      if (HeadsOrTails == 0) {
+        matrixState[i][j] = (bool*)pgm_read_byte(&(Heads[i][j])); //here we read the matrix from FLASH
+      }
+      else if (HeadsOrTails == 1) {
+        matrixState[i][j] = (bool*)pgm_read_byte(&(Tails[i][j])); //here we read the matrix from FLASH
+      }
+    }
+  }
+  delay(2000);
+}
+
 
 void goSleep() {
   //going sleep to reduce power consuming
