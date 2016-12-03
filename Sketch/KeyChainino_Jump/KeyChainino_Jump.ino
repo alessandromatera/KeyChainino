@@ -1,11 +1,11 @@
 /*************************************************************************
- * JUMP GAME FOR KEYCHAININO www.keychainino.com
- * 
- * last Update 30/12/2015
- *
- * created by Alessandro Matera
+   JUMP GAME FOR KEYCHAININO www.keychainino.com
+
+   last Update 30/12/2015
+
+   created by Alessandro Matera
  * ************************************************************************
- */
+*/
 
 
 #include <avr/pgmspace.h>
@@ -189,7 +189,7 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
         pinMode(pins[connectionMatrix[i][j][1]], OUTPUT); //set negative pole to OUTPUT
         digitalWrite(pins[connectionMatrix[i][j][0]], HIGH); //set positive pole to HIGH
         digitalWrite(pins[connectionMatrix[i][j][1]], LOW); //set negative pole to LOW
-        delayMicroseconds(400); //250
+        delayMicroseconds(250); //250
         pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
         pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
       }
@@ -251,7 +251,7 @@ void setup() {
   clearMatrix(); //clear the Matrix
 
   //show man
-  matrixState[manNewPosition[0]][manCurrentPosition[1]] = 1;
+  setMatrixStateBit(manNewPosition[0], manCurrentPosition[1]);
 
   gameStarted = true; //Start the game
 }
@@ -308,12 +308,12 @@ void updateRockPosition() {
 
   //delete previous rock position
   for (byte height = 0; height < MATRIX_ROW; height++) {
-    matrixState[height][rockOldPosition] = 0;
+    clearMatrixStateBit(height, rockOldPosition);
   }
 
   //show new rock position
   for (byte height = 0; height < rockHeight; height++) {
-    matrixState[4 - height][rockXPosition] = 1;
+    setMatrixStateBit(4 - height, rockXPosition);
   }
 
 
@@ -330,14 +330,14 @@ void updateManPosition() {
         manY--;
         if (manY >= 0) {
           manNewPosition[0] = manY;
-          matrixState[manCurrentPosition[0]][manCurrentPosition[1]] = 0;
+          clearMatrixStateBit(manCurrentPosition[0], manCurrentPosition[1]);
 
           //set current man position to new position
           manCurrentPosition[0] = manNewPosition[0];
           manCurrentPosition[1] = manNewPosition[1];
 
           //show new man Position
-          matrixState[manNewPosition[0]][manCurrentPosition[1]] = 1;
+          setMatrixStateBit(manNewPosition[0], manCurrentPosition[1]);
           delay(50);
         }
       }
@@ -352,19 +352,19 @@ void updateManPosition() {
       //Go down
       for (byte i = manY; i < MATRIX_ROW; i++) {
         manNewPosition[0] = i;
-        matrixState[manCurrentPosition[0]][manCurrentPosition[1]] = 0;
+        clearMatrixStateBit(manCurrentPosition[0], manCurrentPosition[1]);
 
         //set current man position to new position
         manCurrentPosition[0] = manNewPosition[0];
         manCurrentPosition[1] = manNewPosition[1];
 
         //show new man Position
-        matrixState[manNewPosition[0]][manCurrentPosition[1]] = 1;
+        setMatrixStateBit(manNewPosition[0], manCurrentPosition[1]);
         delay(50);
       }
     }
   }
-  matrixState[manCurrentPosition[0]][manCurrentPosition[1]] = 1;
+  setMatrixStateBit(manCurrentPosition[0], manCurrentPosition[1]);
 }
 
 void showScore(byte scoreNumber) {
@@ -466,7 +466,7 @@ void clearMatrix() {
   //clear the matrix by inserting 0 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 0;
+      clearMatrixStateBit(i, j);
     }
   }
 }
@@ -475,9 +475,24 @@ void fullMatrix() {
   //turn on all LEDs in the matrix by inserting 1 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 1;
+      setMatrixStateBit(i, j);
     }
   }
+}
+
+//here we set or clear a single bit on the matrixState. We use this funciton in order
+//to really set or clear the matrix's bit when an interrupt occours. To do that we disable the
+//interrupt -> set or clear the bit -> enable interrupt
+
+void setMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 1;
+  sei();
+}
+void clearMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 0;
+  sei();
 }
 
 void showKeyChaininoFace() {

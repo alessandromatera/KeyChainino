@@ -177,7 +177,7 @@ void clearMatrix() {
   //clear the matrix by inserting 0 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 0;
+      clearMatrixStateBit(i, j);
     }
   }
 }
@@ -186,7 +186,7 @@ void fullMatrix() {
   //turn on all LEDs in the matrix by inserting 1 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 1;
+      setMatrixStateBit(i, j);
     }
   }
 }
@@ -244,7 +244,7 @@ void showHeadsOrTails(byte HeadsOrTails) {
             matrixState[i][j] = (bool*)pgm_read_byte(&(Rotating_3[i][j])); //here we read the matrix from FLASH
           }
           else if (rotation == 4) {
-            matrixState[i][j] = 0; //here we read the matrix from FLASH
+            clearMatrixStateBit(i, j);
           }
         }
       }
@@ -266,6 +266,22 @@ void showHeadsOrTails(byte HeadsOrTails) {
     }
   }
   delay(2000);
+}
+
+
+//here we set or clear a single bit on the matrixState. We use this funciton in order
+//to really set or clear the matrix's bit when an interrupt occours. To do that we disable the
+//interrupt -> set or clear the bit -> enable interrupt
+
+void setMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 1;
+  sei();
+}
+void clearMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 0;
+  sei();
 }
 
 

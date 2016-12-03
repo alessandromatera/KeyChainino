@@ -250,7 +250,7 @@ void setup() {
   //show wall
   for (byte x = 0; x < MATRIX_COL; x++) {
     if (x != wallGateXPosition) {
-      matrixState[wallYPosition][x] = 1;
+      setMatrixStateBit(wallYPosition, x);
     }
   }
 
@@ -312,13 +312,13 @@ void updateWallPosition() {
 
   //delete previous wall position
   for (byte x = 0; x < MATRIX_COL; x++) {
-    matrixState[wallOldYPosition][x] = 0;
+    clearMatrixStateBit(wallOldYPosition, x);
   }
 
   //show new wall position
   for (byte x = 0; x < MATRIX_COL; x++) {
     if (x != wallGateXPosition) {
-      matrixState[wallYPosition][x] = 1;
+      setMatrixStateBit(wallYPosition, x);
     }
   }
 
@@ -361,14 +361,14 @@ void updateManPosition() {
   // (means that the button was pressed)
   if (manXNewPosition != manXPosition) {
     //delete current man Position
-    matrixState[MATRIX_ROW - 1][manXPosition] = 0;
+    clearMatrixStateBit(MATRIX_ROW - 1, manXPosition);
   }
 
   //set current man position to new position
   manXPosition = manXNewPosition;
 
   //show new man Position
-  matrixState[MATRIX_ROW - 1][manXPosition] = 1;
+  setMatrixStateBit(MATRIX_ROW - 1, manXPosition);
 }
 
 
@@ -458,7 +458,7 @@ void resetGame() {
   //show wall
   for (byte x = 0; x < MATRIX_COL; x++) {
     if (x != wallGateXPosition) {
-      matrixState[wallYPosition][x] = 1;
+      setMatrixStateBit(wallYPosition, x);
     }
   }
 
@@ -469,7 +469,7 @@ void clearMatrix() {
   //clear the matrix by inserting 0 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 0;
+      clearMatrixStateBit(i, j);
     }
   }
 }
@@ -478,9 +478,24 @@ void fullMatrix() {
   //turn on all LEDs in the matrix by inserting 1 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 1;
+      setMatrixStateBit(i, j);
     }
   }
+}
+
+//here we set or clear a single bit on the matrixState. We use this funciton in order
+//to really set or clear the matrix's bit when an interrupt occours. To do that we disable the
+//interrupt -> set or clear the bit -> enable interrupt
+
+void setMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 1;
+  sei();
+}
+void clearMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 0;
+  sei();
 }
 
 void showKeyChaininoFace() {

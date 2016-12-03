@@ -45,12 +45,6 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
   cli(); //disable interrupt
   TCNT1 = 65406;
 
-  /*
-   * The timer overflows 60 times per seconds.
-   * So we increment the secondsCounter.
-   * If it reaches 60, we have a second!
-   */
-
   // THIS PART IS USED TO UPDATE THE CHARLIEPLEXING LEDS MATRIX
   // YOU CAN JUST DON'T CARE ABOUT THIS PART
   // BECAUSE YOU CAN CODE LIKE A STANDARD MATRIX BY MANIPULATING THE
@@ -144,7 +138,7 @@ void clearMatrix() {
   //clear the matrix by inserting 0 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 0;
+      clearMatrixStateBit(i, j);
     }
   }
 }
@@ -153,11 +147,25 @@ void fullMatrix() {
   //turn on all LEDs in the matrix by inserting 1 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 1;
+      setMatrixStateBit(i, j);
     }
   }
 }
 
+//here we set or clear a single bit on the matrixState. We use this funciton in order
+//to really set or clear the matrix's bit when an interrupt occours. To do that we disable the
+//interrupt -> set or clear the bit -> enable interrupt
+
+void setMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 1;
+  sei();
+}
+void clearMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 0;
+  sei();
+}
 void goSleep() {
   //going sleep to reduce power consuming
   //enable interrupt buttons to allow wakeup from button interrupts

@@ -2,7 +2,7 @@
    Analog Sketch - FOR KEYCHAININO www.keychainino.com
 
    this sketch shows Analog read from pin A5 (MISO, First ISP pin)
-   
+
    created by Alessandro Matera 03/01/2016
  * ************************************************************************
 */
@@ -202,24 +202,6 @@ void loop() {
   //goSleep();
 }
 
-void clearMatrix() {
-  //clear the matrix by inserting 0 to the matrixState
-  for (byte i = 0; i < MATRIX_ROW; i++) {
-    for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 0;
-    }
-  }
-}
-
-void fullMatrix() {
-  //turn on all LEDs in the matrix by inserting 1 to the matrixState
-  for (byte i = 0; i < MATRIX_ROW; i++) {
-    for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 1;
-    }
-  }
-}
-
 void showAnalog(int scoreNumber) {
 
   clearMatrix();
@@ -282,6 +264,39 @@ void writeCharter(char charterToShow, byte i, byte j, byte col) {
   else if (charterToShow == ' ') { //SYMBOLS FOR SPACE
     matrixState[j][i] = 0;
   }
+}
+
+void clearMatrix() {
+  //clear the matrix by inserting 0 to the matrixState
+  for (byte i = 0; i < MATRIX_ROW; i++) {
+    for (byte j = 0; j < MATRIX_COL; j++) {
+      clearMatrixStateBit(i, j);
+    }
+  }
+}
+
+void fullMatrix() {
+  //turn on all LEDs in the matrix by inserting 1 to the matrixState
+  for (byte i = 0; i < MATRIX_ROW; i++) {
+    for (byte j = 0; j < MATRIX_COL; j++) {
+      setMatrixStateBit(i, j);
+    }
+  }
+}
+
+//here we set or clear a single bit on the matrixState. We use this funciton in order
+//to really set or clear the matrix's bit when an interrupt occours. To do that we disable the
+//interrupt -> set or clear the bit -> enable interrupt
+
+void setMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 1;
+  sei();
+}
+void clearMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 0;
+  sei();
 }
 
 

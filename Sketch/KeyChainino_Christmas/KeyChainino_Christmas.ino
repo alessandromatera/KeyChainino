@@ -1,9 +1,9 @@
 /*************************************************************************
- * SCROLLING YOUR NAME - FOR KEYCHAININO www.keychainino.com
- *
- * created by Alessandro Matera
+   SCROLLING YOUR NAME - FOR KEYCHAININO www.keychainino.com
+
+   created by Alessandro Matera
  * ************************************************************************
- */
+*/
 
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
@@ -151,11 +151,22 @@ void endGame() {
 }
 
 
+void showStars() {
+  for (int i = 0; i < 83; i++) {
+    row = random(0, MATRIX_ROW);
+    col = random(0, MATRIX_COL);
+    setMatrixStateBit(row, col);
+    delay(60);
+    clearMatrixStateBit(row, col);
+  }
+}
+
+
 void clearMatrix() {
   //clear the matrix by inserting 0 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 0;
+      clearMatrixStateBit(i, j);
     }
   }
 }
@@ -164,19 +175,24 @@ void fullMatrix() {
   //turn on all LEDs in the matrix by inserting 1 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 1;
+      setMatrixStateBit(i, j);
     }
   }
 }
 
-void showStars() {
-  for (int i = 0; i < 83; i++) {
-    row = random(0, MATRIX_ROW);
-    col = random(0, MATRIX_COL);
-    matrixState[row][col] = 1;
-    delay(60);
-    matrixState[row][col] = 0;
-  }
+//here we set or clear a single bit on the matrixState. We use this funciton in order
+//to really set or clear the matrix's bit when an interrupt occours. To do that we disable the
+//interrupt -> set or clear the bit -> enable interrupt
+
+void setMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 1;
+  sei();
+}
+void clearMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 0;
+  sei();
 }
 
 

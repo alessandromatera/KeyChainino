@@ -1,7 +1,7 @@
 /*************************************************************************
-   Basic Sketch - FOR KEYCHAININO www.keychainino.com
+   ARKANOID GAME FOR KEYCHAININO www.keychainino.com
 
-   created by Alessandro Matera 03/01/2016
+   created by Alessandro Matera
  * ************************************************************************
 */
 
@@ -19,7 +19,7 @@
 
 const byte pins[PIN_NUMBER] = {0, 1, 2, 3, 7, 9, 10}; //the number of the pin used for the LEDs in ordered
 
-const byte connectionMatrix[MATRIX_ROW][MATRIX_COL][2] = { //the matrix that shows the LEDs pin connections. First Value is the Anode, second is the Catode
+const byte connectionMatrix[MATRIX_ROW][MATRIX_COL][2] = { //the matrix that shows the LEDs pin connections. First Value is the Anode, second is the Cathode
   {{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}},
   {{0, 1}, {2, 1}, {3, 1}, {4, 1}, {5, 1}, {6, 1}},
   {{0, 2}, {1, 2}, {3, 2}, {4, 2}, {5, 2}, {6, 2}},
@@ -27,7 +27,7 @@ const byte connectionMatrix[MATRIX_ROW][MATRIX_COL][2] = { //the matrix that sho
   {{0, 4}, {1, 4}, {2, 4}, {3, 4}, {5, 4}, {6, 4}}
 };
 
-bool matrixState[MATRIX_ROW][MATRIX_COL] = { //the matrix that will be always used to turn ON or OFF the LEDs
+byte matrixState[MATRIX_ROW][MATRIX_COL] = { //the matrix that will be always used to turn ON or OFF the LEDs
   {0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0},
@@ -35,10 +35,26 @@ bool matrixState[MATRIX_ROW][MATRIX_COL] = { //the matrix that will be always us
   {0, 0, 0, 0, 0, 0}
 };
 
+byte LEDmatrix[MATRIX_ROW][MATRIX_COL] = { //the matrix that will be always used to turn ON or OFF the LEDs
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0}
+};
+
+//KeyChainino Face stored in FLASH in order to reduce RAM size
+const PROGMEM bool KeyChaininoFace[MATRIX_ROW][MATRIX_COL] = {
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 1, 1, 0, 0},
+  {0, 0, 0, 0, 0, 0},
+  {1, 0, 0, 0, 0, 1},
+  {0, 1, 1, 1, 1, 0}
+};
 
 ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
   cli(); //disable interrupt
-  TCNT1 = 65406;
+  TCNT1 = 65405;
 
   // THIS PART IS USED TO UPDATE THE CHARLIEPLEXING LEDS MATRIX
   // YOU CAN JUST DON'T CARE ABOUT THIS PART
@@ -53,11 +69,7 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
         pinMode(pins[connectionMatrix[i][j][1]], OUTPUT); //set negative pole to OUTPUT
         digitalWrite(pins[connectionMatrix[i][j][0]], HIGH); //set positive pole to HIGH
         digitalWrite(pins[connectionMatrix[i][j][1]], LOW); //set negative pole to LOW
-        delayMicroseconds(250);
-        pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
-        pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
-      }
-      if (matrixState[i][j] == 0) { //turn off LED with 0 in matrixState
+        delayMicroseconds(250); //250
         pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
         pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
       }
@@ -75,6 +87,7 @@ ISR(INT0_vect) { //BUTTON B INTERRUPT
 }
 
 
+
 void setup() {
   //configure LED pins
   for (byte i = 0; i < PIN_NUMBER; i++) {
@@ -88,13 +101,13 @@ void setup() {
   // initialize Timer1
   cli();         // disable global interrupts
   TCCR1A = 0;    // set entire TCCR1A register to 0
-  TCCR1B = 0;    // set entire TCCR1B register to 0
+  TCCR1B = 0;    // set entire TCCR1A register to 0
 
   // enable Timer1 overflow interrupt:
-  bitSet(TIMSK1, TOIE1);
+  TIMSK1 |= (1 << TOIE1);
 
-  // preload timer 65536 - (8000000 / 1024 / 60)
-  TCNT1 = 65406;
+  // preload timer 65536 - (8000000 / 1024 / 60) = 60Hz
+  TCNT1 = 65405;
 
   // set 1024 prescaler
   bitSet(TCCR1B, CS12);
@@ -109,14 +122,19 @@ void setup() {
   // enable global interrupts:
   sei();
 
-  clearMatrix(); //clear the Matrix
-
+  showKeyChaininoFace(); //show KeyChainino smile face
+  delay(500);
+  clearMatrix();
 }
 
-void loop() {
-  //do something here
 
-  goSleep();
+
+
+void loop() {
+  setMatrixStateBit(0, 5);
+  delay(1000);
+  clearMatrixStateBit(0, 5);
+  delay(1000);
 }
 
 void clearMatrix() {
@@ -137,9 +155,23 @@ void fullMatrix() {
   }
 }
 
-//here we set or clear a single bit on the matrixState. We use this funciton in order
-//to really set or clear the matrix's bit when an interrupt occours. To do that we disable the
-//interrupt -> set or clear the bit -> enable interrupt
+void showKeyChaininoFace() {
+  for (byte i = 0; i < MATRIX_ROW; i++) {
+    for (byte j = 0; j < MATRIX_COL; j++) {
+      matrixState[i][j] = (bool*)pgm_read_byte(&(KeyChaininoFace[i][j])); //here we read the matrix from FLASH
+    }
+  }
+}
+
+void delay_ms(int ms) {
+  unsigned long currentMillis = millis();
+  unsigned long previousMillis = currentMillis;
+
+  while ((currentMillis - previousMillis) < ms) {
+    // save the last time you blinked the LED
+    currentMillis = millis();
+  }
+}
 
 void setMatrixStateBit(byte i, byte j) {
   cli();
@@ -150,23 +182,5 @@ void clearMatrixStateBit(byte i, byte j) {
   cli();
   matrixState[i][j] = 0;
   sei();
-}
-
-void goSleep() {
-  //going sleep to reduce power consuming
-  //enable interrupt buttons to allow wakeup from button interrupts
-  bitSet(GIMSK, INT0); //enable interrupt pin 8 - button B - INT0
-  bitSet(PCMSK0, PCINT6); //enable interrupt pin 6 - button A - PCINT6
-  power_timer0_disable(); //disable Timer 0
-  power_timer1_disable(); //disable Timer 1
-  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-  while (digitalRead(BUTTON_B) || digitalRead(BUTTON_A)) { //until all the two buttons are pressend
-    sleep_mode();
-  }
-  //disable interrupt buttons after sleep
-  bitClear(GIMSK, INT0); //disable interrupt pin 8 - button B - INT0
-  bitClear(PCMSK0, PCINT6); //disable interrupt pin 6 - button A - PCINT6
-  power_timer0_enable(); //enable Timer 0
-  power_timer1_enable(); //enable Timer 1
 }
 

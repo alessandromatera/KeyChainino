@@ -1,9 +1,9 @@
 /*************************************************************************
- * ARKANOID GAME FOR KEYCHAININO www.keychainino.com
- *
- * created by Alessandro Matera
+   ARKANOID GAME FOR KEYCHAININO www.keychainino.com
+
+   created by Alessandro Matera
  * ************************************************************************
- */
+*/
 
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
@@ -67,7 +67,7 @@ byte ballUpdatePositionCounter = 0; //it is a counter to update ball position
 const byte ballUpdatePositionCONSTANT = 12; //this number is directly proportional to the speed of the ball
 
 //the game score calculated in the number of collision between bar and ball
-int score = 0; 
+int score = 0;
 
 bool gameStarted = false; //indicates if the game is started
 
@@ -373,12 +373,12 @@ void updateBallPosition() {
   ballNewPosition[0] = ballY;
   ballNewPosition[1] = ballX;
   //delete current ball Position
-  matrixState[ballCurrentPosition[0]][ballCurrentPosition[1]] = 0;
+  clearMatrixStateBit(ballCurrentPosition[0], ballCurrentPosition[1]);
   //set current bar position to new position
   ballCurrentPosition[0] = ballNewPosition[0];
   ballCurrentPosition[1] = ballNewPosition[1];
   //show new bar Position
-  matrixState[ballNewPosition[0]][ballNewPosition[1]] = 1;
+  setMatrixStateBit(ballNewPosition[0], ballNewPosition[1]);
 }
 
 void updateBarPosition() {
@@ -420,8 +420,8 @@ void updateBarPosition() {
   if (barNewPosition[0][1] != barCurrentPosition[0][1]) {
 
     //delete current bar Position
-    matrixState[barCurrentPosition[0][0]][barCurrentPosition[0][1]] = 0;
-    matrixState[barCurrentPosition[1][0]][barCurrentPosition[1][1]] = 0;
+    clearMatrixStateBit(barCurrentPosition[0][0], barCurrentPosition[0][1]);
+    clearMatrixStateBit(barCurrentPosition[1][0], barCurrentPosition[1][1]);
   }
   //set current bar position to new position
   barCurrentPosition[0][0] = barNewPosition[0][0];
@@ -430,8 +430,8 @@ void updateBarPosition() {
   barCurrentPosition[1][1] = barNewPosition[1][1];
 
   //show new bar Position
-  matrixState[barNewPosition[0][0]][barNewPosition[0][1]] = 1;
-  matrixState[barNewPosition[1][0]][barNewPosition[1][1]] = 1;
+  setMatrixStateBit(barNewPosition[0][0], barNewPosition[0][1]);
+  setMatrixStateBit(barNewPosition[1][0], barNewPosition[1][1]);
 }
 
 
@@ -542,7 +542,7 @@ void clearMatrix() {
   //clear the matrix by inserting 0 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 0;
+      clearMatrixStateBit(i, j);
     }
   }
 }
@@ -551,10 +551,11 @@ void fullMatrix() {
   //turn on all LEDs in the matrix by inserting 1 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 1;
+      setMatrixStateBit(i, j);
     }
   }
 }
+
 
 void showKeyChaininoFace() {
   for (byte i = 0; i < MATRIX_ROW; i++) {
@@ -564,6 +565,20 @@ void showKeyChaininoFace() {
   }
 }
 
+//here we set or clear a single bit on the matrixState. We use this funciton in order
+//to really set or clear the matrix's bit when an interrupt occours. To do that we disable the 
+//interrupt -> set or clear the bit -> enable interrupt
+
+void setMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 1;
+  sei();
+}
+void clearMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 0;
+  sei();
+}
 
 void goSleep() {
   //going sleep to reduce power consuming

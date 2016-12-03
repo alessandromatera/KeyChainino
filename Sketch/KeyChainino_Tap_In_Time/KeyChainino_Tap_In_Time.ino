@@ -405,26 +405,38 @@ void loop()
 }
 
 
-void clearMatrix()
-{
+void clearMatrix() {
   //clear the matrix by inserting 0 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 0;
+      clearMatrixStateBit(i, j);
     }
   }
 }
 
-void fullMatrix()
-{
+void fullMatrix() {
   //turn on all LEDs in the matrix by inserting 1 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 1;
+      setMatrixStateBit(i, j);
     }
   }
 }
 
+//here we set or clear a single bit on the matrixState. We use this funciton in order
+//to really set or clear the matrix's bit when an interrupt occours. To do that we disable the
+//interrupt -> set or clear the bit -> enable interrupt
+
+void setMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 1;
+  sei();
+}
+void clearMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 0;
+  sei();
+}
 
 //show the number and letters according to the matrix number and matrix text
 void writeCharter(char charterToShow, byte i, byte j, byte col) {
@@ -564,36 +576,36 @@ void MostraTesto(char phrase[], int ritardo) //Show texts according the array an
 void AnimazioneAvvio()  //Show little animation before the game starts
 {
   delay(60);
-  matrixState[0][2] = 1;
-  matrixState[0][3] = 1;
+  setMatrixStateBit(0, 2);
+  setMatrixStateBit(0, 3);
   delay(70);
-  matrixState[0][1] = 1;
-  matrixState[0][4] = 1;
+  setMatrixStateBit(0, 1);
+  setMatrixStateBit(0, 4);
   delay(70);
-  matrixState[0][0] = 1;
-  matrixState[0][5] = 1;
+  setMatrixStateBit(0, 0);
+  setMatrixStateBit(0, 5);
   delay(70);
-  matrixState[1][0] = 1;
-  matrixState[1][5] = 1;
+  setMatrixStateBit(1, 0);
+  setMatrixStateBit(1, 5);
   delay(70);
-  matrixState[2][0] = 1;
-  matrixState[2][5] = 1;
+  setMatrixStateBit(2, 0);
+  setMatrixStateBit(2, 5);
   delay(90);
-  matrixState[3][0] = 1;
-  matrixState[3][5] = 1;
+  setMatrixStateBit(3, 0);
+  setMatrixStateBit(3, 5);
   delay(90);
-  matrixState[4][0] = 1;
-  matrixState[4][5] = 1;
+  setMatrixStateBit(4, 0);
+  setMatrixStateBit(4, 5);
   delay(90);
-  matrixState[0][2] = 0;
-  matrixState[0][3] = 0;
-  matrixState[4][1] = 1;
-  matrixState[4][4] = 1;
+  clearMatrixStateBit(0, 2);
+  clearMatrixStateBit(0, 3);
+  setMatrixStateBit(4, 1);
+  setMatrixStateBit(4, 4);
   delay(90);
-  matrixState[0][1] = 0;
-  matrixState[0][4] = 0;
-  matrixState[4][2] = 1;
-  matrixState[4][3] = 1;
+  clearMatrixStateBit(0, 1);
+  clearMatrixStateBit(0, 4);
+  setMatrixStateBit(4, 2);
+  setMatrixStateBit(4, 3);
   delay(300);
   clearMatrix();
 }
@@ -684,7 +696,7 @@ void MostraRispostaSX()
     visual = 3;
 
   for (byte i = visual; i < MATRIX_ROW; i++)
-    matrixState[i][0] = 1;
+    setMatrixStateBit(i, 0);
 }
 
 //Lights right coloumn of led
@@ -700,21 +712,21 @@ void MostraRispostaDX()
     visual = 3;
 
   for (byte i = visual; i < MATRIX_ROW; i++)
-    matrixState[i][5] = 1;
+    setMatrixStateBit(i, 5);
 }
 
 //Clear right coloumn of led
 void CancellaDX()
 {
   for (byte i = 0; i < MATRIX_ROW; i++)
-    matrixState[i][5] = 0;
+    clearMatrixStateBit(i, 5);
 }
 
 //Clear left coloumn of led
 void CancellaSX()
 {
   for (byte i = 0; i < MATRIX_ROW; i++)
-    matrixState[i][0] = 0;
+    clearMatrixStateBit(i, 0);
 }
 
 /*************************************************/
@@ -752,13 +764,13 @@ void CompareNotaSX()
     if (YnotaSX != 0)
     {
       ControlloVelocita();    //test if temporary score is 10 and boost velocity
-      matrixState[YnotaSX - 1][1] = 0;
-      matrixState[YnotaSX - 1][2] = 0;
+      clearMatrixStateBit(YnotaSX - 1, 1);
+      clearMatrixStateBit(YnotaSX - 1, 2);
     }
     if (YnotaSX < 5)
     {
-      matrixState[YnotaSX][1] = 1;
-      matrixState[YnotaSX][2] = 1;
+      setMatrixStateBit(YnotaSX, 1);
+      setMatrixStateBit(YnotaSX, 2);
       YnotaSX++;
       if (YnotaSX == 4) //when note is in the end of matrix, set flag end note
       {
@@ -769,8 +781,8 @@ void CompareNotaSX()
     else
     {
       YnotaSX = 0;
-      matrixState[YnotaSX + 4][1] = 0;
-      matrixState[YnotaSX + 4][2] = 0;
+      clearMatrixStateBit(YnotaSX + 4, 1);
+      clearMatrixStateBit(YnotaSX + 4, 2);
       FlagNotaSX = 0;
     }
   }
@@ -787,14 +799,14 @@ void CompareNotaDX()
     if (YnotaDX != 0)
     {
       ControlloVelocita();
-      matrixState[YnotaDX - 1][3] = 0;
-      matrixState[YnotaDX - 1][4] = 0;
+      clearMatrixStateBit(YnotaDX - 1, 3);
+      clearMatrixStateBit(YnotaDX - 1, 4);
     }
 
     if (YnotaDX < 5)
     {
-      matrixState[YnotaDX][3] = 1;
-      matrixState[YnotaDX][4] = 1;
+      setMatrixStateBit(YnotaDX, 3);
+      setMatrixStateBit(YnotaDX, 4);
       YnotaDX++;
       if (YnotaDX == 4)
       {
@@ -805,8 +817,8 @@ void CompareNotaDX()
     else
     {
       YnotaDX = 0;
-      matrixState[YnotaDX + 4][3] = 0;
-      matrixState[YnotaDX + 4][4] = 0;
+      clearMatrixStateBit(YnotaDX + 4, 3);
+      clearMatrixStateBit(YnotaDX + 4, 4);
       FlagNotaDX = 0;
     }
   }

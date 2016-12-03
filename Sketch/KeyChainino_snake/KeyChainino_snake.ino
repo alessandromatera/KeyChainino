@@ -10,7 +10,7 @@
   created by Alessandro Matera
 
   14/05/16
-   
+
  * ************************************************************************
 */
 
@@ -191,10 +191,10 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
     }
     if (foodBlink) {
       //set food position
-      matrixState[food[0]][food[1]] = 1;
+      setMatrixStateBit(food[0], food[1]);
     } else {
       //clear food position
-      matrixState[food[0]][food[1]] = 0;
+      clearMatrixStateBit(food[0], food[1]);
     }
 
   }
@@ -214,6 +214,10 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
         digitalWrite(pins[connectionMatrix[i][j][0]], HIGH); //set positive pole to HIGH
         digitalWrite(pins[connectionMatrix[i][j][1]], LOW); //set negative pole to LOW
         delayMicroseconds(250); //250
+        pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
+        pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
+      }
+      if (matrixState[i][j] == 0) { //turn off LED with 0 in matrixState
         pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
         pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
       }
@@ -382,7 +386,7 @@ void updateSnakePosition() {
   if ((newSnakePosition[0][0] == food[0]) && (newSnakePosition[0][1] == food[1])) {
 
     //clear food position
-    matrixState[food[0]][food[1]] = 0;
+    clearMatrixStateBit(food[0], food[1]);
 
     score++; //increse score
 
@@ -432,18 +436,18 @@ void updateSnakePosition() {
   //delete current snake Position
 
   for (byte i = 0; i < numSnakePieces; i++) {
-    matrixState[snakePosition[i][0]][snakePosition[i][1]] = 0; //clear
+    clearMatrixStateBit(snakePosition[i][0], snakePosition[i][1]); //clear
   }
 
   //set current snake Position
   for (byte i = 0; i < numSnakePieces; i++) {
     snakePosition[i][0] = newSnakePosition[i][0];
     snakePosition[i][1] = newSnakePosition[i][1];
-    matrixState[snakePosition[i][0]][snakePosition[i][1]] = 1; //set
+    setMatrixStateBit(snakePosition[i][0], snakePosition[i][1]); //set
   }
 
   //set new food position
-  matrixState[food[0]][food[1]] = 1;
+  setMatrixStateBit(food[0], food[1]);
 }
 
 
@@ -549,11 +553,12 @@ void resetGame() {
   gameStarted = true;
 }
 
+
 void clearMatrix() {
   //clear the matrix by inserting 0 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 0;
+      clearMatrixStateBit(i, j);
     }
   }
 }
@@ -562,9 +567,24 @@ void fullMatrix() {
   //turn on all LEDs in the matrix by inserting 1 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      matrixState[i][j] = 1;
+      setMatrixStateBit(i, j);
     }
   }
+}
+
+//here we set or clear a single bit on the matrixState. We use this funciton in order
+//to really set or clear the matrix's bit when an interrupt occours. To do that we disable the
+//interrupt -> set or clear the bit -> enable interrupt
+
+void setMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 1;
+  sei();
+}
+void clearMatrixStateBit(byte i, byte j) {
+  cli();
+  matrixState[i][j] = 0;
+  sei();
 }
 
 void showKeyChaininoFace() {
