@@ -1,5 +1,5 @@
 /*************************************************************************
-   ARKANOID GAME FOR KEYCHAININO USB www.keychainino.com
+   ARKANOID GAME FOR KEYCHAININO V2 USB www.keychainino.com
 
    created by Alessandro Matera
  * ************************************************************************
