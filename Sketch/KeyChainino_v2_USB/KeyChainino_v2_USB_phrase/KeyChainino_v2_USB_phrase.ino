@@ -5,6 +5,8 @@
  * ************************************************************************
 */
 
+char phrase[] = "HELLO WORLD ";
+
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <avr/power.h>
@@ -559,7 +561,6 @@ void setup() {
   resetGame();
 }
 
-char phrase[] = "HELLO WORLD ";
 
 String phrase_str;
 
