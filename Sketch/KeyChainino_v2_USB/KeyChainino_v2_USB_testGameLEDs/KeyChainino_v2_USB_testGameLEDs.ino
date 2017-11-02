@@ -17,6 +17,11 @@
 #define BUTTON_A 2 // INT1
 #define BUTTON_B 3 // INT0
 
+unsigned long timer = 64900;
+
+byte i_Charlie = 0;
+byte j_Charlie = 0;
+
 const byte pins[PIN_NUMBER] = {4, 5, 6, 7, 8, 9, 10, 11, 12}; //the number of the pin used for the LEDs in ordered
 
 const byte connectionMatrix[MATRIX_ROW][MATRIX_COL][2] = { //the matrix that show the LEDs pin connections. Firs Value is the Anode, second is the Catode
@@ -56,36 +61,41 @@ const PROGMEM bool KeyChaininoFace[MATRIX_ROW][MATRIX_COL] = {
 
 ISR(TIMER1_OVF_vect) {  // timer1 overflow interrupt service routine
   cli(); //disable interrupt
-  TCNT1 = 65405;
+  TCNT1 = timer;// 65405;
 
   //THIS PART IS USED TO UPDATE THE BALL'S MOVIMENT IN THE GAME
   //if game is started change ball position
-
-
 
   // THIS PART IS USED TO UPDATE THE CHARLIEPLEXING LEDS MATRIX
   // YOU CAN JUST DON'T CARE ABOUT THIS PART
   // BECAUSE YOU CAN CODE LIKE A STANDARD MATRIX BY MANIPULATING THE
   // VALUE OF THE matrixState MATRIX
 
-  //check from matrixState which LED to turn ON or OFF
+
+  pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][0]], INPUT); //set both positive pole and negative pole
+  pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][1]], INPUT); // to INPUT in order to turn OFF the LED
 
 
-  for (byte i = 0; i < MATRIX_ROW; i++) {
-    for (byte j = 0; j < MATRIX_COL; j++) {
-      if (matrixState[i][j] == 1) { //turn on LED with 1 in matrixState
-        pinMode(pins[connectionMatrix[i][j][0]], OUTPUT); //set positive pole to OUTPUT
-        pinMode(pins[connectionMatrix[i][j][1]], OUTPUT); //set negative pole to OUTPUT
-        digitalWrite(pins[connectionMatrix[i][j][0]], HIGH); //set positive pole to HIGH
-        digitalWrite(pins[connectionMatrix[i][j][1]], LOW); //set negative pole to LOW
-        delayMicroseconds(150); //250
-        pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
-        pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
-      }
+  j_Charlie++;
+  if (j_Charlie >= MATRIX_COL) {
+    j_Charlie = 0;
+    i_Charlie++;
+    if (i_Charlie >= MATRIX_ROW) {
+      i_Charlie = 0;
     }
   }
+
+  if (matrixState[i_Charlie][j_Charlie] == 1) { //turn on LED with 1 in matrixState
+    pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][0]], OUTPUT); //set positive pole to OUTPUT
+    pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][1]], OUTPUT); //set negative pole to OUTPUT
+    digitalWrite(pins[connectionMatrix[i_Charlie][j_Charlie][0]], HIGH); //set positive pole to HIGH
+    digitalWrite(pins[connectionMatrix[i_Charlie][j_Charlie][1]], LOW); //set negative pole to LOW
+  }
+
+
   sei(); //enable interrupt
 }
+
 
 ISR(INT1_vect) { //BUTTON A INTERRUPT
   //do nothing
@@ -112,15 +122,11 @@ void setup() {
   TCCR1A = 0;    // set entire TCCR1A register to 0
   TCCR1B = 0;    // set entire TCCR1A register to 0
 
-  // enable Timer1 overflow interrupt:
-  bitSet(TIMSK1, TOIE1);
+  bitSet(TIMSK1, TOIE1); // enable Timer1 overflow interrupt:
 
-  // preload timer 65536 - (8000000 / 1024 / 60) = 60Hz
-  TCNT1 = 65405;
+  TCNT1 = timer;
 
-
-  // set 1024 prescaler
-  bitSet(TCCR1B, CS12);
+  // set prescaler
   bitSet(TCCR1B, CS10);
 
   //disabling all unnecessary peripherals to reduce power
@@ -138,7 +144,6 @@ void setup() {
   wdt_disable();
 
 
-
   // enable global interrupts:
   sei();
 
@@ -149,6 +154,7 @@ void setup() {
 
 int i;// = MATRIX_ROW - 1;
 int j;// = 0;
+
 void loop() {
   if (!digitalRead(BUTTON_B)) {
     i = MATRIX_ROW - 1;
@@ -258,23 +264,58 @@ void clearMatrixStateBit(byte i, byte j) {
 void goSleep() {
   //going sleep to reduce power consuming
 
+  power_timer0_disable(); //disable Timer 0
+  power_timer1_disable(); //disable Timer 1
+
+  for (byte i = 0; i < MATRIX_ROW; i++) {
+    for (byte j = 0; j < MATRIX_COL; j++) {
+      pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
+      pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
+    }
+  }
+
+
   //enable interrupt buttons to allow wakeup from button interrupts
   bitSet(EIMSK, INT0); //enable interrupt button B - INT0
   bitSet(EIMSK, INT1); //enable interrupt button A - INT1
 
-  power_timer0_disable(); //disable Timer 0
-  power_timer1_disable(); //disable Timer 1
+  // Disable the USB interface
+  bitClear(USBCON, USBE);
+
+  // Disable the VBUS transition enable bit
+  bitClear(USBCON, VBUSTE);
+
+  // Disable the VUSB pad
+  bitClear(USBCON, OTGPADE);
+
+  // Freeze the USB clock
+  bitClear(USBCON, FRZCLK);
+
+  // Disable USB pad regulator
+  bitClear(UHWCON, UVREGE);
+
+  // Clear the IVBUS Transition Interrupt flag
+  bitClear(USBINT, VBUSTI);
+
+  // Physically detact USB (by disconnecting internal pull-ups on D+ and D-)
+  bitSet(UDCON, DETACH);
+
+  power_usb_disable();
 
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+
   sleep_mode();
-
-
   //disable interrupt buttons after sleep
   bitClear(EIMSK, INT0); //enable interrupt button B - INT0
   bitClear(EIMSK, INT1); //enable interrupt button A - INT1
+
   power_timer0_enable(); //enable Timer 0
   power_timer1_enable(); //enable Timer 1
 
+  power_usb_enable();
+
+  USBDevice.attach();
+  // delay(100);
 
 }
 

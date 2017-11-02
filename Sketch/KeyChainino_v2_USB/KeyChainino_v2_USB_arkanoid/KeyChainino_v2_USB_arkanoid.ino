@@ -307,10 +307,15 @@ void setup() {
   // enable global interrupts:
   sei();
 
-  showKeyChaininoFace(); //show KeyChainino smile face
-  delay(500);
-  clearMatrix(); //clear the Matrix
-  gameStarted = true; //Start the game
+  /*showKeyChaininoFace(); //show KeyChainino smile face
+    delay(500);
+    clearMatrix(); //clear the Matrix
+    gameStarted = true; //Start the game
+  */
+
+
+  goSleep();
+  resetGame();
 
 }
 

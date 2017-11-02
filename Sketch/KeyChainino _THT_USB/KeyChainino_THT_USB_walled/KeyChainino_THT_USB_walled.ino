@@ -16,9 +16,9 @@
 #include <avr/power.h>
 #include <avr/wdt.h>
 
-#define MATRIX_ROW 8
-#define MATRIX_COL 8
-#define PIN_NUMBER 9
+#define MATRIX_ROW 5
+#define MATRIX_COL 6
+#define PIN_NUMBER 7
 
 #define BUTTON_A 2 // INT1
 #define BUTTON_B 3 // INT0
@@ -28,28 +28,22 @@ unsigned long timer = 64900;
 byte i_Charlie = 0;
 byte j_Charlie = 0;
 
-const byte pins[PIN_NUMBER] = {4, 5, 6, 7, 8, 9, 10, 11, 12}; //the number of the pin used for the LEDs in ordered
+const byte pins[PIN_NUMBER] = {4, 5, 6, 7, 8, 9, 10}; //the number of the pin used for the LEDs in ordered
 
-const byte connectionMatrix[MATRIX_ROW][MATRIX_COL][2] = { //the matrix that show the LEDs pin connections. Firs Value is the Anode, second is the Catode
-  {{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}},
-  {{0, 1}, {2, 1}, {3, 1}, {4, 1}, {5, 1}, {6, 1}, {7, 1}, {8, 1}},
-  {{0, 2}, {1, 2}, {3, 2}, {4, 2}, {5, 2}, {6, 2}, {7, 2}, {8, 2}},
-  {{0, 3}, {1, 3}, {2, 3}, {4, 3}, {5, 3}, {6, 3}, {7, 3}, {8, 3}},
-  {{0, 4}, {1, 4}, {2, 4}, {3, 4}, {5, 4}, {6, 4}, {7, 4}, {8, 4}},
-  {{0, 5}, {1, 5}, {2, 5}, {3, 5}, {4, 5}, {6, 5}, {7, 5}, {8, 5}},
-  {{0, 6}, {1, 6}, {2, 6}, {3, 6}, {4, 6}, {5, 6}, {7, 6}, {8, 6}},
-  {{0, 7}, {1, 7}, {2, 7}, {3, 7}, {4, 7}, {5, 7}, {6, 7}, {8, 7}},
+const byte connectionMatrix[MATRIX_ROW][MATRIX_COL][2] = { //the matrix that shows the LEDs pin connections. First Value is the Anode, second is the Cathode
+  {{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}},
+  {{0, 1}, {2, 1}, {3, 1}, {4, 1}, {5, 1}, {6, 1}},
+  {{0, 2}, {1, 2}, {3, 2}, {4, 2}, {5, 2}, {6, 2}},
+  {{0, 3}, {1, 3}, {2, 3}, {4, 3}, {5, 3}, {6, 3}},
+  {{0, 4}, {1, 4}, {2, 4}, {3, 4}, {5, 4}, {6, 4}}
 };
 
 bool matrixState[MATRIX_ROW][MATRIX_COL] = { //the matrix that will be always used to turn ON or OFF the LEDs
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0}
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0}
 };
 
 
@@ -61,7 +55,7 @@ byte wallGateXPosition = random(0, MATRIX_COL); //randomized wall's gate
 byte wallYPosition = 0; //Y value of the wall
 unsigned int wallCounter = 0; //the number of walls spawned used to increase the speed
 
-const int wallSpeed = 2000; //this number is inversely proportional to the speed of the wall
+const int wallSpeed = 2500; //this number is inversely proportional to the speed of the wall
 int wallUpdatePositionCounter = 0; //it is a counter to update wall position
 int wallUpdatePositionSpeed = wallSpeed; //the actual speed of the wall
 
@@ -73,129 +67,97 @@ byte score = 0; //0 //MAX 255 for byte
 bool gameStarted = false; //indicates if the game is started
 
 // KeyChainino Face stored in FLASH in order to reduce RAM size
-const PROGMEM bool KeyChaininoFace[MATRIX_ROW][MATRIX_COL] = {
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 1, 1, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 1, 0, 0, 0, 0, 1, 0},
-  {0, 0, 1, 1, 1, 1, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0}
-};
 
+//KeyChainino Face stored in FLASH in order to reduce RAM size
+const PROGMEM bool KeyChaininoFace[MATRIX_ROW][MATRIX_COL] = {
+  {0, 0, 0, 0, 0, 0},
+  {0, 0, 1, 1, 0, 0},
+  {0, 0, 0, 0, 0, 0},
+  {1, 0, 0, 0, 0, 1},
+  {0, 1, 1, 1, 1, 0}
+};
 
 //NUMBERS used in score stored in FLASH in order to reduce RAM size
 
 const PROGMEM bool one[MATRIX_ROW][MATRIX_COL]  = {
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 1, 0, 0, 0},
-  {0, 0, 0, 1, 1, 0, 0, 0},
-  {0, 0, 1, 0, 1, 0, 0, 0},
-  {0, 0, 0, 0, 1, 0, 0, 0},
-  {0, 0, 0, 0, 1, 0, 0, 0},
-  {0, 0, 0, 0, 1, 0, 0, 0},
-  {0, 0, 0, 0, 1, 0, 0, 0}
+  {0, 0, 0, 1, 0, 0},
+  {0, 0, 1, 1, 0, 0},
+  {0, 0, 0, 1, 0, 0},
+  {0, 0, 0, 1, 0, 0},
+  {0, 0, 0, 1, 0, 0}
 };
 
 const PROGMEM bool two[MATRIX_ROW][MATRIX_COL] = {
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 1, 1, 1, 0, 0},
-  {0, 0, 1, 0, 0, 0, 1, 0},
-  {0, 0, 0, 0, 0, 0, 1, 0},
-  {0, 0, 0, 0, 0, 1, 0, 0},
-  {0, 0, 0, 0, 1, 0, 0, 0},
-  {0, 0, 0, 1, 0, 0, 0, 0},
-  {0, 0, 1, 1, 1, 1, 1, 0}
+  {0, 0, 1, 1, 0, 0},
+  {0, 0, 0, 0, 1, 0},
+  {0, 0, 0, 1, 0, 0},
+  {0, 0, 1, 0, 0, 0},
+  {0, 0, 1, 1, 1, 0}
 };
 
 const PROGMEM bool three[MATRIX_ROW][MATRIX_COL] = {
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 1, 1, 1, 0, 0},
-  {0, 0, 0, 0, 0, 0, 1, 0},
-  {0, 0, 0, 0, 0, 0, 1, 0},
-  {0, 0, 0, 0, 1, 1, 0, 0},
-  {0, 0, 0, 0, 0, 0, 1, 0},
-  {0, 0, 0, 0, 0, 0, 1, 0},
-  {0, 0, 0, 1, 1, 1, 0, 0}
+  {0, 0, 1, 1, 0, 0},
+  {0, 0, 0, 0, 1, 0},
+  {0, 0, 0, 1, 0, 0},
+  {0, 0, 0, 0, 1, 0},
+  {0, 0, 1, 1, 0, 0}
 };
 
 const PROGMEM bool four[MATRIX_ROW][MATRIX_COL] = {
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 1, 0, 0},
-  {0, 0, 0, 0, 1, 1, 0, 0},
-  {0, 0, 0, 1, 0, 1, 0, 0},
-  {0, 0, 1, 0, 0, 1, 0, 0},
-  {0, 1, 1, 1, 1, 1, 1, 0},
-  {0, 0, 0, 0, 0, 1, 0, 0},
-  {0, 0, 0, 0, 0, 1, 0, 0}
+  {0, 0, 0, 0, 1, 0},
+  {0, 0, 0, 1, 1, 0},
+  {0, 0, 1, 0, 1, 0},
+  {0, 1, 1, 1, 1, 1},
+  {0, 0, 0, 0, 1, 0}
 };
 
 const PROGMEM bool five[MATRIX_ROW][MATRIX_COL] = {
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 1, 1, 1, 1, 0},
-  {0, 0, 0, 1, 0, 0, 0, 0},
-  {0, 0, 0, 1, 0, 0, 0, 0},
-  {0, 0, 0, 1, 1, 1, 0, 0},
-  {0, 0, 0, 0, 0, 0, 1, 0},
-  {0, 0, 0, 0, 0, 0, 1, 0},
-  {0, 0, 0, 1, 1, 1, 0, 0}
+  {0, 0, 1, 1, 1, 0},
+  {0, 0, 1, 0, 0, 0},
+  {0, 0, 1, 1, 0, 0},
+  {0, 0, 0, 0, 1, 0},
+  {0, 0, 1, 1, 0, 0}
 };
 
 const PROGMEM bool six[MATRIX_ROW][MATRIX_COL] = {
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 1, 0, 0},
-  {0, 0, 0, 0, 1, 0, 0, 0},
-  {0, 0, 0, 1, 0, 0, 0, 0},
-  {0, 0, 1, 1, 1, 1, 0, 0},
-  {0, 0, 1, 0, 0, 0, 1, 0},
-  {0, 0, 1, 0, 0, 0, 1, 0},
-  {0, 0, 0, 1, 1, 1, 0, 0}
+  {0, 0, 0, 1, 0, 0},
+  {0, 0, 1, 0, 0, 0},
+  {0, 1, 1, 1, 0, 0},
+  {0, 1, 0, 0, 1, 0},
+  {0, 0, 1, 1, 0, 0}
 };
 
 const PROGMEM bool seven[MATRIX_ROW][MATRIX_COL] = {
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 1, 1, 1, 1, 1, 0},
-  {0, 0, 0, 0, 0, 0, 1, 0},
-  {0, 0, 0, 0, 0, 0, 1, 0},
-  {0, 0, 0, 0, 0, 1, 0, 0},
-  {0, 0, 0, 0, 1, 0, 0, 0},
-  {0, 0, 0, 1, 0, 0, 0, 0},
-  {0, 0, 1, 0, 0, 0, 0, 0}
+  {0, 1, 1, 1, 1, 0},
+  {0, 0, 0, 0, 1, 0},
+  {0, 0, 0, 1, 0, 0},
+  {0, 0, 1, 0, 0, 0},
+  {0, 1, 0, 0, 0, 0}
 };
 
 const PROGMEM bool eight[MATRIX_ROW][MATRIX_COL] = {
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 1, 1, 1, 0, 0},
-  {0, 0, 1, 0, 0, 0, 1, 0},
-  {0, 0, 1, 0, 0, 0, 1, 0},
-  {0, 0, 0, 1, 1, 1, 0, 0},
-  {0, 0, 1, 0, 0, 0, 1, 0},
-  {0, 0, 1, 0, 0, 0, 1, 0},
-  {0, 0, 0, 1, 1, 1, 0, 0}
+  {0, 0, 1, 1, 0, 0},
+  {0, 1, 0, 0, 1, 0},
+  {0, 0, 1, 1, 0, 0},
+  {0, 1, 0, 0, 1, 0},
+  {0, 0, 1, 1, 0, 0}
 };
 
 const PROGMEM bool nine[MATRIX_ROW][MATRIX_COL] = {
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 1, 1, 1, 0, 0},
-  {0, 0, 1, 0, 0, 0, 1, 0},
-  {0, 0, 1, 0, 0, 0, 1, 0},
-  {0, 0, 0, 1, 1, 1, 1, 0},
-  {0, 0, 0, 0, 0, 1, 0, 0},
-  {0, 0, 0, 0, 1, 0, 0, 0},
-  {0, 0, 0, 1, 0, 0, 0, 0}
-};
-const PROGMEM bool zero[MATRIX_ROW][MATRIX_COL] = {
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 1, 1, 1, 0, 0},
-  {0, 0, 1, 0, 0, 0, 1, 0},
-  {0, 0, 1, 0, 0, 0, 1, 0},
-  {0, 0, 1, 0, 0, 0, 1, 0},
-  {0, 0, 1, 0, 0, 0, 1, 0},
-  {0, 0, 1, 0, 0, 0, 1, 0},
-  {0, 0, 0, 1, 1, 1, 0, 0}
+  {0, 0, 1, 1, 0, 0},
+  {0, 1, 0, 0, 1, 0},
+  {0, 0, 1, 1, 1, 0},
+  {0, 0, 0, 1, 0, 0},
+  {0, 0, 1, 0, 0, 0}
 };
 
+const PROGMEM bool zero[MATRIX_ROW][MATRIX_COL] = {
+  {0, 0, 1, 1, 0, 0},
+  {0, 1, 0, 0, 1, 0},
+  {0, 1, 0, 0, 1, 0},
+  {0, 1, 0, 0, 1, 0},
+  {0, 0, 1, 1, 0, 0}
+};
 
 ISR(TIMER1_OVF_vect) {  // timer1 overflow interrupt service routine
   cli(); //disable interrupt
@@ -304,10 +266,8 @@ void setup() {
     }
   }
 
-  //gameStarted = true; //Start the game
+  gameStarted = true; //Start the game
 
-  goSleep();
-  resetGame();
 }
 
 void loop() {
@@ -446,7 +406,7 @@ void showScore(byte scoreNumber) {
         }
 
       }
-      delay(80);
+      delay(100);
     }
   }
 }
@@ -618,7 +578,7 @@ void goSleep() {
   while (falsePush) {
     if (!digitalRead(BUTTON_B) && !digitalRead(BUTTON_A)) { //until all the two buttons are pressend
       power_timer0_enable(); //enable Timer 0 in order to enable delay() function
-      delay(2000);
+      delay(1000);
       if (!digitalRead(BUTTON_B) && !digitalRead(BUTTON_A)) {
         falsePush = false;
       } else {
