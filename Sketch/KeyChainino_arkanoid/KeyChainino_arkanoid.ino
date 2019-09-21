@@ -2,6 +2,8 @@
    ARKANOID GAME FOR KEYCHAININO www.keychainino.com
 
    created by Alessandro Matera
+
+   UPDATE ON 21/09/2019 with new charlieplexing technique
  * ************************************************************************
 */
 
@@ -16,6 +18,11 @@
 
 #define BUTTON_A 6 //pin 6 - PCINT6
 #define BUTTON_B 8 //pin 8 - INT0
+
+unsigned long timer = 64900;
+
+byte i_Charlie = 0;
+byte j_Charlie = 0;
 
 const byte pins[PIN_NUMBER] = {0, 1, 2, 3, 7, 9, 10}; //the number of the pin used for the LEDs in ordered
 
@@ -52,7 +59,7 @@ int barX2 = barCurrentPosition[1][1]; //variable that indicates the position of 
 int barY2 = barCurrentPosition[1][0]; // position as X and Y
 
 //BALL VARIABLES
-int ballCurrentPosition[2] = {0, random(0, MATRIX_COL)}; //the randomized ball position
+int ballCurrentPosition[2] = { -1, random(0, MATRIX_COL)}; //the randomized ball position
 int ballNewPosition[2]; //the new Ball position
 
 int ballX = ballCurrentPosition[1]; //variable that indicates the position of the first ball DOT
@@ -63,8 +70,8 @@ int ballY = ballCurrentPosition[0]; //position as X and Y
 //X: 0 = STOP, 1 = RIGHT, -1 = LEFT
 int ballDirection[2] = {1, 0}; //Y, X  indicates the direction where the ball is going
 
-byte ballUpdatePositionCounter = 0; //it is a counter to update ball position
-const byte ballUpdatePositionCONSTANT = 12; //this number is directly proportional to the speed of the ball
+int ballUpdatePositionCounter = 0; //it is a counter to update ball position
+const int ballUpdatePositionCONSTANT = 1800; //this number is directly proportional to the speed of the ball
 
 //the game score calculated in the number of collision between bar and ball
 int score = 0;
@@ -166,7 +173,7 @@ const PROGMEM bool zero[MATRIX_ROW][MATRIX_COL] = {
 
 ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
   cli(); //disable interrupt
-  TCNT1 = 65405;
+  TCNT1 = timer;
 
   //THIS PART IS USED TO UPDATE THE BALL'S MOVIMENT IN THE GAME
   //if game is started change ball position
@@ -186,25 +193,32 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
   // BECAUSE YOU CAN CODE LIKE A STANDARD MATRIX BY MANIPULATING THE
   // VALUE OF THE matrixState MATRIX
 
-  //check from matrixState which LED to turn ON or OFF
-  for (byte i = 0; i < MATRIX_ROW; i++) {
-    for (byte j = 0; j < MATRIX_COL; j++) {
-      if (matrixState[i][j] == 1) { //turn on LED with 1 in matrixState
-        pinMode(pins[connectionMatrix[i][j][0]], OUTPUT); //set positive pole to OUTPUT
-        pinMode(pins[connectionMatrix[i][j][1]], OUTPUT); //set negative pole to OUTPUT
-        digitalWrite(pins[connectionMatrix[i][j][0]], HIGH); //set positive pole to HIGH
-        digitalWrite(pins[connectionMatrix[i][j][1]], LOW); //set negative pole to LOW
-        delayMicroseconds(250); //250
-        pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
-        pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
-      }
-      if (matrixState[i][j] == 0) { //turn off LED with 0 in matrixState
-        pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
-        pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
-      }
+  pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][0]], INPUT); //set both positive pole and negative pole
+  pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][1]], INPUT); // to INPUT in order to turn OFF the LED
+
+
+  j_Charlie++;
+  if (j_Charlie == MATRIX_COL) {
+    j_Charlie = 0;
+    i_Charlie++;
+    if (i_Charlie == MATRIX_ROW) {
+      i_Charlie = 0;
     }
   }
+
+  if (matrixState[i_Charlie][j_Charlie] == 1) { //turn on LED with 1 in matrixState
+    pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][0]], OUTPUT); //set positive pole to OUTPUT
+    pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][1]], OUTPUT); //set negative pole to OUTPUT
+    digitalWrite(pins[connectionMatrix[i_Charlie][j_Charlie][0]], HIGH); //set positive pole to HIGH
+    digitalWrite(pins[connectionMatrix[i_Charlie][j_Charlie][1]], LOW); //set negative pole to LOW
+  } else {
+    pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][0]], INPUT); //set both positive pole and negative pole
+    pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][1]], INPUT); // to INPUT in order to turn OFF the LED
+  }
+
+
   sei(); //enable interrupt
+
 }
 
 ISR(PCINT0_vect) { //BUTTON A INTERRUPT
@@ -236,10 +250,9 @@ void setup() {
   TIMSK1 |= (1 << TOIE1);
 
   // preload timer 65536 - (8000000 / 1024 / 60) = 60Hz
-  TCNT1 = 65405;
+  TCNT1 = timer;// 65405;
 
-  // set 1024 prescaler
-  bitSet(TCCR1B, CS12);
+  // set no prescaler
   bitSet(TCCR1B, CS10);
 
   bitSet(GIMSK, PCIE0); //enable pingChange global interrupt
@@ -250,7 +263,7 @@ void setup() {
   power_usi_disable(); // disable USI
   // enable global interrupts:
   sei();
-
+  goSleep();
   showKeyChaininoFace(); //show KeyChainino smile face
   delay(500);
   clearMatrix(); //clear the Matrix
@@ -507,23 +520,32 @@ void resetGame() {
   clearMatrix();
   delay(300);
 
-  barCurrentPosition[0][0] = 0;
-  barCurrentPosition[0][1] = 0;
-  barCurrentPosition[1][0] = 0;
-  barCurrentPosition[1][1] = 0;
+  /*barCurrentPosition[0][0] = 0;
+    barCurrentPosition[0][1] = 0;
+    barCurrentPosition[1][0] = 0;
+    barCurrentPosition[1][1] = 0;*/
 
   barNewPosition[0][0] = 4;
   barNewPosition[0][1] = 2;
   barNewPosition[1][0] = 4;
   barNewPosition[1][1] = 3;
 
+  //set current bar position to new position
+  barCurrentPosition[0][0] = barNewPosition[0][0];
+  barCurrentPosition[0][1] = barNewPosition[0][1];
+  barCurrentPosition[1][0] = barNewPosition[1][0];
+  barCurrentPosition[1][1] = barNewPosition[1][1];
+
   barX1 = barNewPosition[0][1];
   barY1 = barNewPosition[0][0];
   barX2 = barNewPosition[1][1];
   barY2 = barNewPosition[1][0];
 
-  ballCurrentPosition[0] = 0;
-  ballCurrentPosition[2] = random(0, MATRIX_COL);
+  setMatrixStateBit(barNewPosition[0][0], barNewPosition[0][1]);
+  setMatrixStateBit(barNewPosition[1][0], barNewPosition[1][1]);
+
+  ballCurrentPosition[0] = -1;
+  ballCurrentPosition[1] = random(0, MATRIX_COL);
 
   ballX = ballCurrentPosition[1];
   ballY = ballCurrentPosition[0];
@@ -542,7 +564,7 @@ void clearMatrix() {
   //clear the matrix by inserting 0 to the matrixState
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
-      clearMatrixStateBit(i, j);
+      matrixState[i][j] = 0;
     }
   }
 }
@@ -566,18 +588,18 @@ void showKeyChaininoFace() {
 }
 
 //here we set or clear a single bit on the matrixState. We use this funciton in order
-//to really set or clear the matrix's bit when an interrupt occours. To do that we disable the 
+//to really set or clear the matrix's bit when an interrupt occours. To do that we disable the
 //interrupt -> set or clear the bit -> enable interrupt
 
 void setMatrixStateBit(byte i, byte j) {
-  cli();
+  //cli();
   matrixState[i][j] = 1;
-  sei();
+  //sei();
 }
 void clearMatrixStateBit(byte i, byte j) {
-  cli();
+  //cli();
   matrixState[i][j] = 0;
-  sei();
+  //sei();
 }
 
 void goSleep() {
@@ -586,8 +608,21 @@ void goSleep() {
   //enable interrupt buttons to allow wakeup from button interrupts
   bitSet(GIMSK, INT0); //enable interrupt pin 8 - button B - INT0
   bitSet(PCMSK0, PCINT6); //enable interrupt pin 6 - button A - PCINT6
+
   power_timer0_disable(); //disable Timer 0
   power_timer1_disable(); //disable Timer 1
+
+  //clean the charlieplexing
+  i_Charlie = 0;
+  j_Charlie = 0;
+  
+  for (byte i = 0; i < MATRIX_ROW; i++) {
+    for (byte j = 0; j < MATRIX_COL; j++) {
+      pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
+      pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
+    }
+  }
+
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   while (digitalRead(BUTTON_B) || digitalRead(BUTTON_A)) { //until all the two buttons are pressend
     sleep_mode();
@@ -598,4 +633,3 @@ void goSleep() {
   power_timer0_enable(); //enable Timer 0
   power_timer1_enable(); //enable Timer 1
 }
-

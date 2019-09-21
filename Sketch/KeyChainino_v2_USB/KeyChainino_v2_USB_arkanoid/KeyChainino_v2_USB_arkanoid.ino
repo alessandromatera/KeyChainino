@@ -76,7 +76,7 @@ int ballY = ballCurrentPosition[0]; //position as X and Y
 int ballDirection[2] = {1, 0}; //Y, X  indicates the direction where the ball is going
 
 int ballUpdatePositionCounter = 0; //it is a counter to update ball position
-const int ballUpdatePositionCONSTANT = 1400;; //this number is directly proportional to the speed of the ball
+const int ballUpdatePositionCONSTANT = 1400; //this number is directly proportional to the speed of the ball
 
 //the game score calculated in the number of collision between bar and ball
 byte score = 0; //0 //MAX 255 for byte
@@ -591,7 +591,7 @@ void resetGame() {
   barY2 = barNewPosition[1][0];
 
   ballCurrentPosition[0] = 0;
-  ballCurrentPosition[2] = random(0, MATRIX_COL);
+  ballCurrentPosition[1] = random(0, MATRIX_COL);
 
   ballX = ballCurrentPosition[1];
   ballY = ballCurrentPosition[0];
@@ -642,14 +642,14 @@ void showKeyChaininoFace() {
 }
 
 void setMatrixStateBit(byte i, byte j) {
-  cli();
+  //cli();
   matrixState[i][j] = 1;
-  sei();
+  //sei();
 }
 void clearMatrixStateBit(byte i, byte j) {
-  cli();
+  //cli();
   matrixState[i][j] = 0;
-  sei();
+  //sei();
 }
 
 void goSleep() {
@@ -658,13 +658,16 @@ void goSleep() {
   power_timer0_disable(); //disable Timer 0
   power_timer1_disable(); //disable Timer 1
 
+  //clean the charlieplexing
+  i_Charlie = 0;
+  j_Charlie = 0;
+
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
       pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
       pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
     }
   }
-
 
   //enable interrupt buttons to allow wakeup from button interrupts
   bitSet(EIMSK, INT0); //enable interrupt button B - INT0
@@ -729,4 +732,3 @@ void goSleep() {
   // delay(100);
 
 }
-

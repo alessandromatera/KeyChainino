@@ -11,6 +11,8 @@
    that coming down from the top of the screen.
 
    The walls speed increase every 10 walls spawned
+
+   UPDATE ON 21/09/2019 with new charlieplexing technique
  * *****************************************************************************
 */
 
@@ -25,6 +27,11 @@
 
 #define BUTTON_A 6 //pin 6 - PCINT6
 #define BUTTON_B 8 //pin 8 - INT0
+
+unsigned long timer = 64900;
+
+byte i_Charlie = 0;
+byte j_Charlie = 0;
 
 const byte pins[PIN_NUMBER] = {0, 1, 2, 3, 7, 9, 10}; //the number of the pin used for the LEDs in ordered
 
@@ -52,9 +59,9 @@ byte wallGateXPosition = random(0, MATRIX_COL); //randomized wall's gate
 byte wallYPosition = 0; //Y value of the wall
 unsigned int wallCounter = 0; //the number of walls spawned used to increase the speed
 
-const byte wallSpeed = 15; //this number is inversely proportional to the speed of the wall
-byte wallUpdatePositionCounter = 0; //it is a counter to update wall position
-byte wallUpdatePositionSpeed = wallSpeed; //the actual speed of the wall
+const int wallSpeed = 3000; //this number is inversely proportional to the speed of the wall
+int wallUpdatePositionCounter = 0; //it is a counter to update wall position
+int wallUpdatePositionSpeed = wallSpeed; //the actual speed of the wall
 
 byte keySensibility = 70; //the sensibility of the two touch buttons. Decrease to have more sensitivity
 
@@ -158,13 +165,13 @@ const PROGMEM bool zero[MATRIX_ROW][MATRIX_COL] = {
 
 ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
   cli(); //disable interrupt
-  TCNT1 = 65405;
+  TCNT1 = timer;
 
   //THIS PART IS USED TO UPDATE THE Wall'S MOVIMENT IN THE GAME
   //if game is started change wall position
   if (gameStarted) {
     //it is a counter used to update the wall position after it reach the wallUpdatePositionSpeed value
-    //becouse timer interrupt is to fast
+    //becouse timer interrupt is too fast
     wallUpdatePositionCounter++;
     if (wallUpdatePositionCounter > wallUpdatePositionSpeed) {
       updateWallPosition();
@@ -173,30 +180,37 @@ ISR(TIM1_OVF_vect) {  // timer1 overflow interrupt service routine
   }
 
 
-  // THIS PART IS USED TO UPDATE THE CHARLIEPLEXING LEDS MATRIX
+  /// THIS PART IS USED TO UPDATE THE CHARLIEPLEXING LEDS MATRIX
   // YOU CAN JUST DON'T CARE ABOUT THIS PART
   // BECAUSE YOU CAN CODE LIKE A STANDARD MATRIX BY MANIPULATING THE
   // VALUE OF THE matrixState MATRIX
 
-  //check from matrixState which LED to turn ON or OFF
-  for (byte i = 0; i < MATRIX_ROW; i++) {
-    for (byte j = 0; j < MATRIX_COL; j++) {
-      if (matrixState[i][j] == 1) { //turn on LED with 1 in matrixState
-        pinMode(pins[connectionMatrix[i][j][0]], OUTPUT); //set positive pole to OUTPUT
-        pinMode(pins[connectionMatrix[i][j][1]], OUTPUT); //set negative pole to OUTPUT
-        digitalWrite(pins[connectionMatrix[i][j][0]], HIGH); //set positive pole to HIGH
-        digitalWrite(pins[connectionMatrix[i][j][1]], LOW); //set negative pole to LOW
-        delayMicroseconds(250); //250
-        pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
-        pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
-      }
-      if (matrixState[i][j] == 0) { //turn off LED with 0 in matrixState
-        pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
-        pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
-      }
+  pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][0]], INPUT); //set both positive pole and negative pole
+  pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][1]], INPUT); // to INPUT in order to turn OFF the LED
+
+
+  j_Charlie++;
+  if (j_Charlie == MATRIX_COL) {
+    j_Charlie = 0;
+    i_Charlie++;
+    if (i_Charlie == MATRIX_ROW) {
+      i_Charlie = 0;
     }
   }
+
+  if (matrixState[i_Charlie][j_Charlie] == 1) { //turn on LED with 1 in matrixState
+    pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][0]], OUTPUT); //set positive pole to OUTPUT
+    pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][1]], OUTPUT); //set negative pole to OUTPUT
+    digitalWrite(pins[connectionMatrix[i_Charlie][j_Charlie][0]], HIGH); //set positive pole to HIGH
+    digitalWrite(pins[connectionMatrix[i_Charlie][j_Charlie][1]], LOW); //set negative pole to LOW
+  } else {
+    pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][0]], INPUT); //set both positive pole and negative pole
+    pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][1]], INPUT); // to INPUT in order to turn OFF the LED
+  }
+
+
   sei(); //enable interrupt
+
 }
 
 ISR(PCINT0_vect) { //BUTTON A INTERRUPT
@@ -225,13 +239,12 @@ void setup() {
   TCCR1B = 0;    // set entire TCCR1A register to 0
 
   // enable Timer1 overflow interrupt:
-  bitSet(TIMSK1, TOIE1);
+  TIMSK1 |= (1 << TOIE1);
 
   // preload timer 65536 - (8000000 / 1024 / 60) = 60Hz
-  TCNT1 = 65405;
+  TCNT1 = timer;// 65405;
 
-  // set 1024 prescaler
-  bitSet(TCCR1B, CS12);
+  // set no prescaler
   bitSet(TCCR1B, CS10);
 
   bitSet(GIMSK, PCIE0); //enable pingChange global interrupt
@@ -242,7 +255,7 @@ void setup() {
   power_usi_disable(); // disable USI
   // enable global interrupts:
   sei();
-
+  goSleep();
   showKeyChaininoFace(); //show KeyChainino smile face
   delay(500);
   clearMatrix(); //clear the Matrix
@@ -303,9 +316,9 @@ void updateWallPosition() {
     wallCounter++; //increase wall counter
     //increase wall spaw update
     if (wallCounter % 10 == 0) { //if wallCounter is egual to 10
-      wallUpdatePositionSpeed--; //we can increase the speed of the wall
-      if (wallUpdatePositionSpeed < 7) { //by decreasing the wallUpdatePositionSpeed variable
-        wallUpdatePositionSpeed = 7; //if this variable is under 7, we stay at this speed.
+      wallUpdatePositionSpeed -= 100; //we can increase the speed of the wall
+      if (wallUpdatePositionSpeed < 2000) { //by decreasing the wallUpdatePositionSpeed variable
+        wallUpdatePositionSpeed = 2000; //if this variable is under 7, we stay at this speed.
       }
     }
   }
@@ -488,14 +501,10 @@ void fullMatrix() {
 //interrupt -> set or clear the bit -> enable interrupt
 
 void setMatrixStateBit(byte i, byte j) {
-  cli();
   matrixState[i][j] = 1;
-  sei();
 }
 void clearMatrixStateBit(byte i, byte j) {
-  cli();
   matrixState[i][j] = 0;
-  sei();
 }
 
 void showKeyChaininoFace() {
@@ -515,6 +524,18 @@ void goSleep() {
   bitSet(PCMSK0, PCINT6); //enable interrupt pin 6 - button A - PCINT6
   power_timer0_disable(); //disable Timer 0
   power_timer1_disable(); //disable Timer 1
+
+  //clean the charlieplexing
+  i_Charlie = 0;
+  j_Charlie = 0;
+
+  for (byte i = 0; i < MATRIX_ROW; i++) {
+    for (byte j = 0; j < MATRIX_COL; j++) {
+      pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
+      pinMode(pins[connectionMatrix[i][j][1]], INPUT); // to INPUT in order to turn OFF the LED
+    }
+  }
+
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   while (digitalRead(BUTTON_B) || digitalRead(BUTTON_A)) { //until all the two buttons are pressend
     sleep_mode();
@@ -525,5 +546,3 @@ void goSleep() {
   power_timer0_enable(); //enable Timer 0
   power_timer1_enable(); //enable Timer 1
 }
-
-
