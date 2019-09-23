@@ -548,4 +548,4 @@ void goSleep() {
   bitClear(PCMSK0, PCINT6); //disable interrupt pin 6 - button A - PCINT6
   power_timer0_enable(); //enable Timer 0
   power_timer1_enable(); //enable Timer 1
-}\
+}
