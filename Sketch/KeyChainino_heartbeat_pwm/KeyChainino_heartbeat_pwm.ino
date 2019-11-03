@@ -5,7 +5,7 @@
 
    Simulate the heartbeat by using pwm to turn on the heart matrix in a softly way.
    After 2 beats, the micro goes on standby and it will be wake up by the watchdog interrupt, set to 8 sec.
-   
+
  * ************************************************************************
 */
 
@@ -158,6 +158,8 @@ void setup() {
   ADCSRA &= ~bit(ADEN); //disable ADC
   power_adc_disable(); // disable ADC converter
   power_usi_disable(); // disable USI
+  wdt_disable(); //disable watchdog
+
   // enable global interrupts:
   sei();
 
@@ -269,12 +271,12 @@ void goSleep() {
     }
   }
   watchdogSetup(); //enable watchDog
-  
-  sleep_mode();
+
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-  
+  sleep_mode();
+
   wdt_disable(); //disable watchdog after sleep
-  
+
   power_timer0_enable(); //enable Timer 0
   power_timer1_enable(); //enable Timer 1
 }
@@ -293,20 +295,21 @@ void watchdogSetup() {
   // 1      0      0      0      4.0 s
   // 1      0      0      1      8.0 s
 
-
   // Reset the watchdog reset flag
   bitClear(MCUSR, WDRF);
+
   // Start timed sequence
   bitSet(WDTCSR, WDCE); //Watchdog Change Enable to clear WD
-  bitSet(WDTCSR, WDE); //Enable WD
 
   // Set new watchdog timeout value to 8sec
-
   bitSet(WDTCSR, WDP3);
   bitClear(WDTCSR, WDP2);
   bitClear(WDTCSR, WDP1);
   bitSet(WDTCSR, WDP0);
 
+  //Enable WD
+  bitSet(WDTCSR, WDE);
+  
   // Enable interrupts instead of reset
   bitSet(WDTCSR, WDIE);
 }
