@@ -1,16 +1,10 @@
-/*****************************************************************************
-   WALLED GAME FOR KEYCHAININO USB www.keychainino.com
+/*************************************************************************
+   ARKANOID GAME FOR KEYCHAININO V2 USB www.keychainino.com
 
    created by Alessandro Matera
-
-   naming by *Don Marco Furi*
-
-   The goal of this game is to move the "man" (a dot) inside the walls's gates
-   that coming down from the top of the screen.
-
-   The walls speed increase every 10 walls spawned
- * *****************************************************************************
+ * ************************************************************************
 */
+
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <avr/power.h>
@@ -20,15 +14,16 @@
 #define MATRIX_COL 8
 #define PIN_NUMBER 9
 
-#define BUTTON_A 2 // INT1
-#define BUTTON_B 3 // INT0
+#define BUTTON_A 3 // INT1
+#define BUTTON_B 2 // INT0
 
 unsigned long timer = 64900;
 
 byte i_Charlie = 0;
 byte j_Charlie = 0;
 
-const byte pins[PIN_NUMBER] = {4, 5, 6, 7, 8, 9, 10, 11, 12}; //the number of the pin used for the LEDs in ordered
+
+const byte pins[PIN_NUMBER] = {4, 5, 6, 7, 8, 9, 10, A0, A1}; //the number of the pin used for the LEDs in ordered
 
 const byte connectionMatrix[MATRIX_ROW][MATRIX_COL][2] = { //the matrix that show the LEDs pin connections. Firs Value is the Anode, second is the Catode
   {{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}},
@@ -52,27 +47,43 @@ bool matrixState[MATRIX_ROW][MATRIX_COL] = { //the matrix that will be always us
   {0, 0, 0, 0, 0, 0, 0, 0}
 };
 
+//BAR VARIABLES
+byte barCurrentPosition[2][2] = { //the current bar position
+  {7, 3},
+  {7, 4}
+};
 
-//MAN VARIABLES
-byte manXPosition = 2;//the position of the man
+byte barNewPosition[2][2] = { //the new bar position. initialized as current position
+  {7, 3},
+  {7, 4}
+};
 
-//Wall variables
-byte wallGateXPosition = random(0, MATRIX_COL); //randomized wall's gate
-byte wallYPosition = 0; //Y value of the wall
-unsigned int wallCounter = 0; //the number of walls spawned used to increase the speed
+int barX1 = barCurrentPosition[0][1]; //variable that indicates the position of the first bar DOT
+int barY1 = barCurrentPosition[0][0]; // position as X and Y
+int barX2 = barCurrentPosition[1][1]; //variable that indicates the position of the second bar DOT
+int barY2 = barCurrentPosition[1][0]; // position as X and Y
 
-const int wallSpeed = 2000; //this number is inversely proportional to the speed of the wall
-int wallUpdatePositionCounter = 0; //it is a counter to update wall position
-int wallUpdatePositionSpeed = wallSpeed; //the actual speed of the wall
+//BALL VARIABLES
+int ballCurrentPosition[2] = {0, random(0, MATRIX_COL)}; //the randomized ball position
+int ballNewPosition[2]; //the new Ball position
 
-byte keySensibility = 70; //the sensibility of the two touch buttons. Decrease to have more sensitivity
+int ballX = ballCurrentPosition[1]; //variable that indicates the position of the first ball DOT
+int ballY = ballCurrentPosition[0]; //position as X and Y
 
-//the game score calculated in the number of gates passed
-byte score = 0; //0 //MAX 255 for byte
+//Direction
+//Y: 0 = STOP, -1 = UP, 1 = down
+//X: 0 = STOP, 1 = RIGHT, -1 = LEFT
+int ballDirection[2] = {1, 0}; //Y, X  indicates the direction where the ball is going
+
+int ballUpdatePositionCounter = 0; //it is a counter to update ball position
+const int ballUpdatePositionCONSTANT = 1400; //this number is directly proportional to the speed of the ball
+
+//the game score calculated in the number of collision between bar and ball
+int score = 0; //0 //MAX 255 for byte
 
 bool gameStarted = false; //indicates if the game is started
 
-// KeyChainino Face stored in FLASH in order to reduce RAM size
+//KeyChainino Face stored in FLASH in order to reduce RAM size
 const PROGMEM bool KeyChaininoFace[MATRIX_ROW][MATRIX_COL] = {
   {0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0},
@@ -197,20 +208,22 @@ const PROGMEM bool zero[MATRIX_ROW][MATRIX_COL] = {
 };
 
 
+
+
 ISR(TIMER1_OVF_vect) {  // timer1 overflow interrupt service routine
   cli(); //disable interrupt
   TCNT1 = timer;// 65405;
 
-  //THIS PART IS USED TO UPDATE THE Wall'S MOVIMENT IN THE GAME
-  //if game is started change wall position
+  //THIS PART IS USED TO UPDATE THE BALL'S MOVIMENT IN THE GAME
+  //if game is started change ball position
   if (gameStarted) {
-    //it is a counter used to update the wall position after it reach the wallUpdatePositionSpeed value
-    //becouse timer interrupt is to fast
-    wallUpdatePositionCounter++;
-    if (wallUpdatePositionCounter > wallUpdatePositionSpeed) {
-      updateWallPosition();
-      wallUpdatePositionCounter = 0;
+    //it is a counter to update ball after counter reset becouse timer interrupt is to fast
+    ballUpdatePositionCounter++;
+    if (ballUpdatePositionCounter > ballUpdatePositionCONSTANT) {
+      updateBallPosition();
+      ballUpdatePositionCounter = 0;
     }
+
   }
 
 
@@ -219,7 +232,6 @@ ISR(TIMER1_OVF_vect) {  // timer1 overflow interrupt service routine
   // BECAUSE YOU CAN CODE LIKE A STANDARD MATRIX BY MANIPULATING THE
   // VALUE OF THE matrixState MATRIX
 
-  //check from matrixState which LED to turn ON or OFF
 
   pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][0]], INPUT); //set both positive pole and negative pole
   pinMode(pins[connectionMatrix[i_Charlie][j_Charlie][1]], INPUT); // to INPUT in order to turn OFF the LED
@@ -241,6 +253,7 @@ ISR(TIMER1_OVF_vect) {  // timer1 overflow interrupt service routine
     digitalWrite(pins[connectionMatrix[i_Charlie][j_Charlie][1]], LOW); //set negative pole to LOW
   }
 
+
   sei(); //enable interrupt
 }
 
@@ -251,6 +264,7 @@ ISR(INT1_vect) { //BUTTON A INTERRUPT
 ISR(INT0_vect) { //BUTTON B INTERRUPT
   //do nothing
 }
+
 
 
 void setup() {
@@ -282,32 +296,17 @@ void setup() {
   power_adc_disable(); // disable ADC converter
   power_spi_disable();
   power_usart0_disable();
-  power_usart1_disable();
   power_twi_disable();
   power_timer2_disable();
-  power_timer3_disable();
-  bitSet(PRR1, 4); //disable timer 4 (bit 4 = PRTIM4)
   wdt_disable();
 
 
   // enable global interrupts:
   sei();
 
-  showKeyChaininoFace(); //show KeyChainino smile face
-  delay(500);
-  clearMatrix(); //clear the Matrix
-
-  //show wall
-  for (byte x = 0; x < MATRIX_COL; x++) {
-    if (x != wallGateXPosition) {
-      matrixState[wallYPosition][x] = 1;
-    }
-  }
-
-  //gameStarted = true; //Start the game
-
   goSleep();
   resetGame();
+
 }
 
 void loop() {
@@ -319,7 +318,7 @@ void loop() {
 }
 
 void game() {
-  updateManPosition(); //update the man position by checking buttons
+  updateBarPosition(); //update the bar position by checking buttons
 }
 
 void endGame() {
@@ -332,95 +331,158 @@ void endGame() {
   resetGame(); //reset game variables
 }
 
-void updateWallPosition() {
+void updateBallPosition() {
+  //change ball position depending on the ball direction
+  ballY = ballCurrentPosition[0] + ballDirection[0];
+  ballX = ballCurrentPosition[1] + ballDirection[1];
 
   //checkCollision
-  if (wallYPosition == MATRIX_ROW - 2) { //if wall is in the same man's Y position
-    //NOTE: we check if the wallYposition is in the position MATRIX_ROW - 2 and
-    // not on MATRIX_ROW - 1 because we increment the wallYPosition after this check
-    if (manXPosition == wallGateXPosition) { //if man passes the wall
-      score++; //increase score
-    } else {
-      gameStarted = false; //esle we end the game
+  if (ballY >= (MATRIX_ROW - 2) && (ballX == barCurrentPosition[0][1] || ballX == barCurrentPosition[1][1])) { // ball touched bottom
+    ballY = MATRIX_ROW - 2;
+    if (ballX >= MATRIX_COL - 1) {
+      ballX = MATRIX_COL - 1;
+    }
+    if (ballX <= 0) {
+      ballX = 0;
+    }
+    if (ballX == barCurrentPosition[0][1] || ballX == barCurrentPosition[1][1]) { //ball touched bar
+      ballDirection[0] = -1;
+      ballDirection[1] = random(-1, 2);
+      score++;
     }
   }
 
-  int wallOldYPosition = wallYPosition; //store the old wall position
-
-  if (wallYPosition < MATRIX_ROW - 1) { //if wall position isn't the bottom
-    wallYPosition++; //increase Y position - go down
-  } else { //else, if the wall touch the bottom
-    wallYPosition = 0; //reset its position
-    wallGateXPosition = random(0, MATRIX_COL); //randomize another gate
-    wallCounter++; //increase wall counter
-    //increase wall spaw update
-    if (wallCounter % 10 == 0) { //if wallCounter is egual to 10
-      wallUpdatePositionSpeed -= 100; //we can increase the speed of the wall
-      if (wallUpdatePositionSpeed < 7) { //by decreasing the wallUpdatePositionSpeed variable
-        wallUpdatePositionSpeed = 7; //if this variable is under 7, we stay at this speed.
-      }
+  else if (ballY >= MATRIX_ROW - 1) { // ball is getting touch bottom and bar
+    ballY = MATRIX_ROW - 1;
+    if (ballX >= MATRIX_COL - 1) {
+      ballX = MATRIX_COL - 1;
     }
-  }
-
-  //delete previous wall position
-  for (byte x = 0; x < MATRIX_COL; x++) {
-    matrixState[wallOldYPosition][x] = 0;
-  }
-
-  //show new wall position
-  for (byte x = 0; x < MATRIX_COL; x++) {
-    if (x != wallGateXPosition) {
-      matrixState[wallYPosition][x] = 1;
+    if (ballX <= 0) {
+      ballX = 0;
     }
+    if (ballX == barCurrentPosition[0][1] || ballX == barCurrentPosition[1][1]) { //ball touched bar
+      ballDirection[0] = -1;
+      ballDirection[1] = random(-1, 2);
+      score++;
+    } else { //ball touched bottom = END
+      //END GAME
+      ballDirection[0] = 0;
+      ballDirection[1] = 0;
+      gameStarted = false;
+    }
+
   }
 
+  else if (ballX >= (MATRIX_COL - 1) && ballY <= 0) { //ball touched right & top
+    ballX = MATRIX_COL - 1;
+    ballY = 0;
+    ballDirection[0] = 1;
+    ballDirection[1] = -1;
+  }
 
+  else if (ballX <= 0 && ballY <= 0) { //ball touched left & top
+    ballX = 0;
+    ballY = 0;
+    ballDirection[0] = 1;
+    ballDirection[1] = 1;
+  }
+
+  else if (ballY <= 0) { //ball touch top
+    ballY = 0;
+    if (ballX >= (MATRIX_COL - 1)) {
+      ballX = MATRIX_COL - 1;
+    }
+    if (ballX <= 0) {
+      ballX = 0;
+    }
+    ballDirection[0] = 1;
+  }
+
+  else if (ballX >= (MATRIX_COL - 1)) { //ball touched right
+    ballX = MATRIX_COL - 1;
+    if (ballY >= MATRIX_ROW - 1) {
+      ballY = MATRIX_ROW - 1;
+    }
+    if (ballY <= 0) {
+      ballY = 0 ;
+    }
+    ballDirection[1] = -1;
+
+  }
+  else if (ballX <= 0) { //ball touched left
+    ballX = 0;
+    if (ballY >= (MATRIX_ROW - 1)) {
+      ballY = MATRIX_ROW - 1;
+    }
+    if (ballY <= 0) {
+      ballY = 0;
+    }
+    ballDirection[1] = 1;
+  }
+
+  //update position
+  ballNewPosition[0] = ballY;
+  ballNewPosition[1] = ballX;
+  //delete current ball Position
+  matrixState[ballCurrentPosition[0]][ballCurrentPosition[1]] = 0;
+  //set current bar position to new position
+  ballCurrentPosition[0] = ballNewPosition[0];
+  ballCurrentPosition[1] = ballNewPosition[1];
+  //show new bar Position
+  matrixState[ballNewPosition[0]][ballNewPosition[1]] = 1;
 }
 
-void updateManPosition() {
+void updateBarPosition() {
 
-  //depends on which button is pressed, change the man position
+  //depends on which button is pressed, change the bar position
   // to left (button A) or right (button B)
 
-  int manXNewPosition = manXPosition; //store man X position that is going to change
-
-  //if we press the button B we go Right
   if (!digitalRead(BUTTON_B)) {
-    delay(keySensibility);
+    delay(80);
     if (!digitalRead(BUTTON_B)) {
-      manXNewPosition++;
+      barX1++;
+      barX2++;
     }
   }
 
-
-  //if we press the button A we go Left
   if (!digitalRead(BUTTON_A)) {
-    delay(keySensibility);
+    delay(80);
     if (!digitalRead(BUTTON_A)) {
-      manXNewPosition--;
+      barX1--;
+      barX2--;
     }
   }
 
-  //fix man X position
-  if (manXNewPosition > MATRIX_COL - 1) {
-    manXNewPosition--;
+  if (barX2 >= MATRIX_COL) {
+    barX2--;
+    barX1--;
   }
-  if (manXNewPosition < 0) {
-    manXNewPosition = 0;
+  if (barX2 == 0) {
+    barX1++;
+    barX2++;
   }
 
-  //only if the man position is different
+  //changing only X Ax
+  barNewPosition[0][1] = barX1;
+  barNewPosition[1][1] = barX2;
+
+  //only if the bar position is different
   // (means that the button was pressed)
-  if (manXNewPosition != manXPosition) {
-    //delete current man Position
-    matrixState[MATRIX_ROW - 1][manXPosition] = 0;
+  if (barNewPosition[0][1] != barCurrentPosition[0][1]) {
+
+    //delete current bar Position
+    matrixState[barCurrentPosition[0][0]][barCurrentPosition[0][1]] = 0;
+    matrixState[barCurrentPosition[1][0]][barCurrentPosition[1][1]] = 0;
   }
+  //set current bar position to new position
+  barCurrentPosition[0][0] = barNewPosition[0][0];
+  barCurrentPosition[0][1] = barNewPosition[0][1];
+  barCurrentPosition[1][0] = barNewPosition[1][0];
+  barCurrentPosition[1][1] = barNewPosition[1][1];
 
-  //set current man position to new position
-  manXPosition = manXNewPosition;
-
-  //show new man Position
-  matrixState[MATRIX_ROW - 1][manXPosition] = 1;
+  //show new bar Position
+  matrixState[barNewPosition[0][0]][barNewPosition[0][1]] = 1;
+  matrixState[barNewPosition[1][0]][barNewPosition[1][1]] = 1;
 }
 
 
@@ -496,40 +558,35 @@ void resetGame() {
   clearMatrix();
   delay(300);
 
-  //check for programming mode
-  if (!digitalRead(BUTTON_B) && !digitalRead(BUTTON_A)) {
-    //programming mode
-    programmingMode();
-  }
+  barCurrentPosition[0][0] = 0;
+  barCurrentPosition[0][1] = 0;
+  barCurrentPosition[1][0] = 0;
+  barCurrentPosition[1][1] = 0;
 
-  manXPosition = 2;
+  barNewPosition[0][0] = 7;
+  barNewPosition[0][1] = 3;
+  barNewPosition[1][0] = 7;
+  barNewPosition[1][1] = 4;
 
-  wallGateXPosition = random(0, MATRIX_COL);
-  wallYPosition = 0; //top screen
-  wallCounter = 0; //the number of walls spawned
+  barX1 = barNewPosition[0][1];
+  barY1 = barNewPosition[0][0];
+  barX2 = barNewPosition[1][1];
+  barY2 = barNewPosition[1][0];
 
-  wallUpdatePositionCounter = 0;
-  wallUpdatePositionSpeed = wallSpeed;
+  ballCurrentPosition[0] = 0;
+  ballCurrentPosition[1] = random(0, MATRIX_COL);
+
+  ballX = ballCurrentPosition[1];
+  ballY = ballCurrentPosition[0];
+
+  ballDirection[0] = 1;
+  ballDirection[1] = 0;
+
+  ballUpdatePositionCounter = 0;
 
   score = 0;
 
-  //show wall
-  for (byte x = 0; x < MATRIX_COL; x++) {
-    if (x != wallGateXPosition) {
-      matrixState[wallYPosition][x] = 1;
-    }
-  }
-
   gameStarted = true;
-}
-
-void programmingMode() {
-  while (1) {
-    fullMatrix();
-    delay(300);
-    clearMatrix();
-    delay(300);
-  }
 }
 
 void clearMatrix() {
@@ -558,16 +615,11 @@ void showKeyChaininoFace() {
   }
 }
 
-
 void setMatrixStateBit(byte i, byte j) {
-  cli();
   matrixState[i][j] = 1;
-  sei();
 }
 void clearMatrixStateBit(byte i, byte j) {
-  cli();
   matrixState[i][j] = 0;
-  sei();
 }
 
 void goSleep() {
@@ -576,6 +628,10 @@ void goSleep() {
   power_timer0_disable(); //disable Timer 0
   power_timer1_disable(); //disable Timer 1
 
+  //clean the charlieplexing
+  i_Charlie = 0;
+  j_Charlie = 0;
+
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
       pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
@@ -583,52 +639,15 @@ void goSleep() {
     }
   }
 
-
   //enable interrupt buttons to allow wakeup from button interrupts
   bitSet(EIMSK, INT0); //enable interrupt button B - INT0
   bitSet(EIMSK, INT1); //enable interrupt button A - INT1
 
-  // Disable the USB interface
-  bitClear(USBCON, USBE);
-
-  // Disable the VBUS transition enable bit
-  bitClear(USBCON, VBUSTE);
-
-  // Disable the VUSB pad
-  bitClear(USBCON, OTGPADE);
-
-  // Freeze the USB clock
-  bitClear(USBCON, FRZCLK);
-
-  // Disable USB pad regulator
-  bitClear(UHWCON, UVREGE);
-
-  // Clear the IVBUS Transition Interrupt flag
-  bitClear(USBINT, VBUSTI);
-
-  // Physically detact USB (by disconnecting internal pull-ups on D+ and D-)
-  bitSet(UDCON, DETACH);
-
-  power_usb_disable();
-
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 
-  bool falsePush = true;
-
-  while (falsePush) {
-    if (!digitalRead(BUTTON_B) && !digitalRead(BUTTON_A)) { //until all the two buttons are pressend
-      power_timer0_enable(); //enable Timer 0 in order to enable delay() function
-      delay(2000);
-      if (!digitalRead(BUTTON_B) && !digitalRead(BUTTON_A)) {
-        falsePush = false;
-      } else {
-        power_timer0_disable();
-        sleep_mode();
-      }
-    } else {
-      sleep_mode();
+  while (digitalRead(BUTTON_B) || digitalRead(BUTTON_A)) { //until all the two buttons are pressend
+    sleep_mode();
     }
-  }
 
   //disable interrupt buttons after sleep
   bitClear(EIMSK, INT0); //enable interrupt button B - INT0
@@ -637,10 +656,4 @@ void goSleep() {
   power_timer0_enable(); //enable Timer 0
   power_timer1_enable(); //enable Timer 1
 
-  power_usb_enable();
-
-  USBDevice.attach();
-  // delay(100);
-
 }
-

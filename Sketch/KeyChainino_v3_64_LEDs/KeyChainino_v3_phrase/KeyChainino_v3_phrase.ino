@@ -5,7 +5,7 @@
  * ************************************************************************
 */
 
-char phrase[] = "HELLO WORLD ";
+char phrase[] = "AND THE WINNER IS... MARUNMAGESH ";
 
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
@@ -16,8 +16,8 @@ char phrase[] = "HELLO WORLD ";
 #define MATRIX_COL 8
 #define PIN_NUMBER 9
 
-#define BUTTON_A 2 // INT1
-#define BUTTON_B 3 // INT0
+#define BUTTON_A 3 // INT1
+#define BUTTON_B 2 // INT0
 
 unsigned long timer = 64900;
 
@@ -25,7 +25,7 @@ byte i_Charlie = 0;
 byte j_Charlie = 0;
 
 
-const byte pins[PIN_NUMBER] = {4, 5, 6, 7, 8, 9, 10, 11, 12}; //the number of the pin used for the LEDs in ordered
+const byte pins[PIN_NUMBER] = {4, 5, 6, 7, 8, 9, 10, A0, A1}; //the number of the pin used for the LEDs in ordered
 
 const byte connectionMatrix[MATRIX_ROW][MATRIX_COL][2] = { //the matrix that show the LEDs pin connections. Firs Value is the Anode, second is the Catode
   {{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}},
@@ -465,12 +465,20 @@ const PROGMEM bool W[MATRIX_ROW][MATRIX_COL]  = {
   {0, 0, 1, 0, 1, 0, 0, 0}
 };
 
+const PROGMEM bool dot[MATRIX_ROW][MATRIX_COL]  = {
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 0, 1, 1, 1},
+  {0, 0, 0, 0, 0, 1, 1, 1},
+  {0, 0, 0, 0, 0, 1, 1, 1}
+};
+
 ISR(TIMER1_OVF_vect) {  // timer1 overflow interrupt service routine
   cli(); //disable interrupt
   TCNT1 = timer;// 65405;
-
-  //THIS PART IS USED TO UPDATE THE BALL'S MOVIMENT IN THE GAME
-  //if game is started change ball position
 
 
   // THIS PART IS USED TO UPDATE THE CHARLIEPLEXING LEDS MATRIX
@@ -512,7 +520,6 @@ ISR(INT0_vect) { //BUTTON B INTERRUPT
 }
 
 
-
 void setup() {
   //configure LED pins
   for (byte i = 0; i < PIN_NUMBER; i++) {
@@ -528,12 +535,9 @@ void setup() {
   TCCR1A = 0;    // set entire TCCR1A register to 0
   TCCR1B = 0;    // set entire TCCR1A register to 0
 
-  // enable Timer1 overflow interrupt:
-  bitSet(TIMSK1, TOIE1);
+  bitSet(TIMSK1, TOIE1); // enable Timer1 overflow interrupt:
 
-  // preload timer 65536 - (8000000 / 1024 / 60) = 60Hz
   TCNT1 = timer;
-
 
   // set prescaler
   bitSet(TCCR1B, CS10);
@@ -545,11 +549,8 @@ void setup() {
   power_adc_disable(); // disable ADC converter
   power_spi_disable();
   power_usart0_disable();
-  power_usart1_disable();
   power_twi_disable();
   power_timer2_disable();
-  power_timer3_disable();
-  bitSet(PRR1, 4); //disable timer 4 (bit 4 = PRTIM4)
   wdt_disable();
 
   // enable global interrupts:
@@ -671,6 +672,9 @@ void writeCharter(char charterToShow, byte i, byte j, byte col) {
   else if (charterToShow == 'W') {
     matrixState[j][i] = (bool*)pgm_read_byte(&(W[j][i - col]));
   }
+  else if (charterToShow == '.') { //SYMBOLS FOR SPACE
+    matrixState[j][i] = (bool*)pgm_read_byte(&(dot[j][i - col]));
+  }
   else if (charterToShow == ' ') { //SYMBOLS FOR SPACE
     matrixState[j][i] = 0;
   }
@@ -689,29 +693,13 @@ void resetGame() {
   //reset all game variables to the start condition
   clearMatrix();
   showKeyChaininoFace();
-  delay(1000);
+  delay(500);
   clearMatrix();
   delay(300);
-
-  //check for programming mode
-  if (!digitalRead(BUTTON_B) && !digitalRead(BUTTON_A)) {
-    //programming mode
-    programmingMode();
-  }
 
   gameStarted = true;
 }
 
-
-void programmingMode() {
-
-  while (1) {
-    fullMatrix();
-    delay(300);
-    clearMatrix();
-    delay(300);
-  }
-}
 
 void clearMatrix() {
   //clear the matrix by inserting 0 to the matrixState
@@ -740,14 +728,10 @@ void showKeyChaininoFace() {
 }
 
 void setMatrixStateBit(byte i, byte j) {
-  cli();
   matrixState[i][j] = 1;
-  sei();
 }
 void clearMatrixStateBit(byte i, byte j) {
-  cli();
   matrixState[i][j] = 0;
-  sei();
 }
 
 void goSleep() {
@@ -756,6 +740,10 @@ void goSleep() {
   power_timer0_disable(); //disable Timer 0
   power_timer1_disable(); //disable Timer 1
 
+  //clean the charlieplexing
+  i_Charlie = 0;
+  j_Charlie = 0;
+
   for (byte i = 0; i < MATRIX_ROW; i++) {
     for (byte j = 0; j < MATRIX_COL; j++) {
       pinMode(pins[connectionMatrix[i][j][0]], INPUT); //set both positive pole and negative pole
@@ -763,55 +751,14 @@ void goSleep() {
     }
   }
 
-
   //enable interrupt buttons to allow wakeup from button interrupts
   bitSet(EIMSK, INT0); //enable interrupt button B - INT0
   bitSet(EIMSK, INT1); //enable interrupt button A - INT1
 
-  // Disable the USB interface
-  bitClear(USBCON, USBE);
-
-  // Disable the VBUS transition enable bit
-  bitClear(USBCON, VBUSTE);
-
-  // Disable the VUSB pad
-  bitClear(USBCON, OTGPADE);
-
-  // Freeze the USB clock
-  bitClear(USBCON, FRZCLK);
-
-  // Disable USB pad regulator
-  bitClear(UHWCON, UVREGE);
-
-  // Clear the IVBUS Transition Interrupt flag
-  bitClear(USBINT, VBUSTI);
-
-  // Physically detact USB (by disconnecting internal pull-ups on D+ and D-)
-  bitSet(UDCON, DETACH);
-
-  power_usb_disable();
-
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 
-  bool falsePush = true;
-
-  /*while (digitalRead(BUTTON_B) || digitalRead(BUTTON_A)) { //until all the two buttons are pressend
+  while (digitalRead(BUTTON_B) || digitalRead(BUTTON_A)) { //until all the two buttons are pressend
     sleep_mode();
-    }*/
-
-  while (falsePush) {
-    if (!digitalRead(BUTTON_B) && !digitalRead(BUTTON_A)) { //until all the two buttons are pressend
-      power_timer0_enable(); //enable Timer 0 in order to enable delay() function
-      delay(2000);
-      if (!digitalRead(BUTTON_B) && !digitalRead(BUTTON_A)) {
-        falsePush = false;
-      } else {
-        power_timer0_disable();
-        sleep_mode();
-      }
-    } else {
-      sleep_mode();
-    }
   }
 
   //disable interrupt buttons after sleep
@@ -821,10 +768,4 @@ void goSleep() {
   power_timer0_enable(); //enable Timer 0
   power_timer1_enable(); //enable Timer 1
 
-  power_usb_enable();
-
-  USBDevice.attach();
-  // delay(100);
-
 }
-

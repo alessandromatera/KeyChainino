@@ -14,8 +14,8 @@
 #define MATRIX_COL 8
 #define PIN_NUMBER 9
 
-#define BUTTON_A 2 // INT1
-#define BUTTON_B 3 // INT0
+#define BUTTON_A 3 // INT1
+#define BUTTON_B 2 // INT0
 
 unsigned long timer = 64900;
 
@@ -23,7 +23,7 @@ byte i_Charlie = 0;
 byte j_Charlie = 0;
 
 
-const byte pins[PIN_NUMBER] = {4, 5, 6, 7, 8, 9, 10, 11, 12}; //the number of the pin used for the LEDs in ordered
+const byte pins[PIN_NUMBER] = {4, 5, 6, 7, 8, 9, 10, A0, A1}; //the number of the pin used for the LEDs in ordered
 
 const byte connectionMatrix[MATRIX_ROW][MATRIX_COL][2] = { //the matrix that show the LEDs pin connections. Firs Value is the Anode, second is the Catode
   {{1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}},
@@ -47,39 +47,32 @@ bool matrixState[MATRIX_ROW][MATRIX_COL] = { //the matrix that will be always us
   {0, 0, 0, 0, 0, 0, 0, 0}
 };
 
-//BAR VARIABLES
-byte barCurrentPosition[2][2] = { //the current bar position
-  {7, 3},
-  {7, 4}
+const byte MAXSNAKEPIECES = 20; //max number of snake pieces
+
+//snake pieces' position. Each piece has two variable Y and X. If its values = -1 means that the piece doesn't exist yet.
+byte snakePosition[MAXSNAKEPIECES][2] = {
+  {3, 4}, {3, 3}, {3, 2}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0},
 };
 
-byte barNewPosition[2][2] = { //the new bar position. initialized as current position
-  {7, 3},
-  {7, 4}
-};
+byte food[2] = {4, 6};
 
-int barX1 = barCurrentPosition[0][1]; //variable that indicates the position of the first bar DOT
-int barY1 = barCurrentPosition[0][0]; // position as X and Y
-int barX2 = barCurrentPosition[1][1]; //variable that indicates the position of the second bar DOT
-int barY2 = barCurrentPosition[1][0]; // position as X and Y
+byte numSnakePieces = 3;
 
-//BALL VARIABLES
-int ballCurrentPosition[2] = {0, random(0, MATRIX_COL)}; //the randomized ball position
-int ballNewPosition[2]; //the new Ball position
-
-int ballX = ballCurrentPosition[1]; //variable that indicates the position of the first ball DOT
-int ballY = ballCurrentPosition[0]; //position as X and Y
-
-//Direction
-//Y: 0 = STOP, -1 = UP, 1 = down
+//Snake's Head Direction Y, X
+//Y: 0 = STOP, -1 = UP, 1 = DOWN
 //X: 0 = STOP, 1 = RIGHT, -1 = LEFT
-int ballDirection[2] = {1, 0}; //Y, X  indicates the direction where the ball is going
+int snakeDirection[2] = {0, 1};
 
-int ballUpdatePositionCounter = 0; //it is a counter to update ball position
-const int ballUpdatePositionCONSTANT = 1400; //this number is directly proportional to the speed of the ball
+const int snakeSpeed = 2000; //this number is inversely proportional to the speed of the snake
+int snakeUpdatePositionCounter = 0; //it is a counter to update wall position
+int snakeUpdatePositionSpeed = snakeSpeed; //the actual speed of the snake
+
+//variable used to make the food blink
+int foodUpdateFlashingCounter = 0;
+byte foodBlink = true;
 
 //the game score calculated in the number of collision between bar and ball
-byte score = 0; //0 //MAX 255 for byte
+int score = 0; //0 //MAX 255 for byte
 
 bool gameStarted = false; //indicates if the game is started
 
@@ -217,11 +210,26 @@ ISR(TIMER1_OVF_vect) {  // timer1 overflow interrupt service routine
   //THIS PART IS USED TO UPDATE THE BALL'S MOVIMENT IN THE GAME
   //if game is started change ball position
   if (gameStarted) {
-    //it is a counter to update ball after counter reset becouse timer interrupt is to fast
-    ballUpdatePositionCounter++;
-    if (ballUpdatePositionCounter > ballUpdatePositionCONSTANT) {
-      updateBallPosition();
-      ballUpdatePositionCounter = 0;
+    //it is a counter used to update the snake position after it reach the snakeUpdatePositionSpeed value
+    //becouse timer interrupt is to fast
+    snakeUpdatePositionCounter++;
+    if (snakeUpdatePositionCounter > snakeUpdatePositionSpeed) {
+      updateSnakePosition();
+      snakeUpdatePositionCounter = 0;
+    }
+
+    //food blink counter
+    foodUpdateFlashingCounter++;
+    if (foodUpdateFlashingCounter > 1000) {
+      foodBlink = !foodBlink;
+      foodUpdateFlashingCounter = 0;
+    }
+    if (foodBlink) {
+      //set food position
+      setMatrixStateBit(food[0], food[1]);
+    } else {
+      //clear food position
+      clearMatrixStateBit(food[0], food[1]);
     }
 
   }
@@ -296,23 +304,13 @@ void setup() {
   power_adc_disable(); // disable ADC converter
   power_spi_disable();
   power_usart0_disable();
-  power_usart1_disable();
   power_twi_disable();
   power_timer2_disable();
-  power_timer3_disable();
-  bitSet(PRR1, 4); //disable timer 4 (bit 4 = PRTIM4)
   wdt_disable();
 
 
   // enable global interrupts:
   sei();
-
-  /*showKeyChaininoFace(); //show KeyChainino smile face
-    delay(500);
-    clearMatrix(); //clear the Matrix
-    gameStarted = true; //Start the game
-  */
-
 
   goSleep();
   resetGame();
@@ -328,7 +326,7 @@ void loop() {
 }
 
 void game() {
-  updateBarPosition(); //update the bar position by checking buttons
+  changeSnakePosition();
 }
 
 void endGame() {
@@ -341,158 +339,160 @@ void endGame() {
   resetGame(); //reset game variables
 }
 
-void updateBallPosition() {
-  //change ball position depending on the ball direction
-  ballY = ballCurrentPosition[0] + ballDirection[0];
-  ballX = ballCurrentPosition[1] + ballDirection[1];
+void changeSnakePosition() {
 
-  //checkCollision
-  if (ballY >= (MATRIX_ROW - 2) && (ballX == barCurrentPosition[0][1] || ballX == barCurrentPosition[1][1])) { // ball touched bottom
-    ballY = MATRIX_ROW - 2;
-    if (ballX >= MATRIX_COL - 1) {
-      ballX = MATRIX_COL - 1;
-    }
-    if (ballX <= 0) {
-      ballX = 0;
-    }
-    if (ballX == barCurrentPosition[0][1] || ballX == barCurrentPosition[1][1]) { //ball touched bar
-      ballDirection[0] = -1;
-      ballDirection[1] = random(-1, 2);
-      score++;
+  //when a button is pressed we change the snake's head direction.
+  //if button A is pressed, we chance the direction to CCW = Counter Clockwise
+  //if button B is pressed, we chance the direction to CW = Clockwise
+
+  if (!digitalRead(BUTTON_A)) {//CCW
+    delay(30);
+    if (!digitalRead(BUTTON_A)) {
+      if (snakeDirection[0] == -1) { //snake is going UP, we go LEFT
+        snakeDirection[0] = 0;
+        snakeDirection[1] = -1;
+      }
+      else if (snakeDirection[0] == 1) { //snake is going DOWN, we go RIGHT
+        snakeDirection[0] = 0;
+        snakeDirection[1] = 1;
+      }
+      else if (snakeDirection[1] == 1) { //snake is going RIGHT, we go UP
+        snakeDirection[0] = -1;
+        snakeDirection[1] = 0;
+      }
+      else if (snakeDirection[1] == -1) { //snake is going LEFT, we go DOWN
+        snakeDirection[0] = 1;
+        snakeDirection[1] = 0;
+      }
+      while (!digitalRead(BUTTON_A)); //while the button is pressed we do nothing.
     }
   }
 
-  else if (ballY >= MATRIX_ROW - 1) { // ball is getting touch bottom and bar
-    ballY = MATRIX_ROW - 1;
-    if (ballX >= MATRIX_COL - 1) {
-      ballX = MATRIX_COL - 1;
-    }
-    if (ballX <= 0) {
-      ballX = 0;
-    }
-    if (ballX == barCurrentPosition[0][1] || ballX == barCurrentPosition[1][1]) { //ball touched bar
-      ballDirection[0] = -1;
-      ballDirection[1] = random(-1, 2);
-      score++;
-    } else { //ball touched bottom = END
-      //END GAME
-      ballDirection[0] = 0;
-      ballDirection[1] = 0;
-      gameStarted = false;
-    }
+  if (!digitalRead(BUTTON_B)) {//CW
+    delay(30);
+    if (!digitalRead(BUTTON_B)) {
+      if (snakeDirection[0] == -1) { //snake is going UP, we go RIGHT
+        snakeDirection[0] = 0;
+        snakeDirection[1] = 1;
+      }
+      else if (snakeDirection[0] == 1) { //snake is going DOWN, we go LEFT
+        snakeDirection[0] = 0;
+        snakeDirection[1] = -1;
+      }
+      else if (snakeDirection[1] == 1) { //snake is going RIGHT, we go DOWN
+        snakeDirection[0] = 1;
+        snakeDirection[1] = 0;
+      }
+      else if (snakeDirection[1] == -1) { //snake is going LEFT, we go UP
+        snakeDirection[0] = -1;
+        snakeDirection[1] = 0;
+      }
 
+      while (!digitalRead(BUTTON_B)); //while the button is pressed we do nothing.
+    }
   }
 
-  else if (ballX >= (MATRIX_COL - 1) && ballY <= 0) { //ball touched right & top
-    ballX = MATRIX_COL - 1;
-    ballY = 0;
-    ballDirection[0] = 1;
-    ballDirection[1] = -1;
-  }
 
-  else if (ballX <= 0 && ballY <= 0) { //ball touched left & top
-    ballX = 0;
-    ballY = 0;
-    ballDirection[0] = 1;
-    ballDirection[1] = 1;
-  }
-
-  else if (ballY <= 0) { //ball touch top
-    ballY = 0;
-    if (ballX >= (MATRIX_COL - 1)) {
-      ballX = MATRIX_COL - 1;
-    }
-    if (ballX <= 0) {
-      ballX = 0;
-    }
-    ballDirection[0] = 1;
-  }
-
-  else if (ballX >= (MATRIX_COL - 1)) { //ball touched right
-    ballX = MATRIX_COL - 1;
-    if (ballY >= MATRIX_ROW - 1) {
-      ballY = MATRIX_ROW - 1;
-    }
-    if (ballY <= 0) {
-      ballY = 0 ;
-    }
-    ballDirection[1] = -1;
-
-  }
-  else if (ballX <= 0) { //ball touched left
-    ballX = 0;
-    if (ballY >= (MATRIX_ROW - 1)) {
-      ballY = MATRIX_ROW - 1;
-    }
-    if (ballY <= 0) {
-      ballY = 0;
-    }
-    ballDirection[1] = 1;
-  }
-
-  //update position
-  ballNewPosition[0] = ballY;
-  ballNewPosition[1] = ballX;
-  //delete current ball Position
-  matrixState[ballCurrentPosition[0]][ballCurrentPosition[1]] = 0;
-  //set current bar position to new position
-  ballCurrentPosition[0] = ballNewPosition[0];
-  ballCurrentPosition[1] = ballNewPosition[1];
-  //show new bar Position
-  matrixState[ballNewPosition[0]][ballNewPosition[1]] = 1;
 }
 
-void updateBarPosition() {
+void updateSnakePosition() {
 
-  //depends on which button is pressed, change the bar position
-  // to left (button A) or right (button B)
+  int newSnakePosition[MAXSNAKEPIECES][2]; //variable that contains the new calcolated snake's position
 
-  if (!digitalRead(BUTTON_B)) {
-    delay(80);
-    if (!digitalRead(BUTTON_B)) {
-      barX1++;
-      barX2++;
+  //update snake's head position according to the snakeDirection
+  newSnakePosition[0][0] = snakePosition[0][0] + snakeDirection[0];
+
+  //adjust head position
+  if (newSnakePosition[0][0] > MATRIX_ROW - 1) {
+    newSnakePosition[0][0] = 0;
+  }
+  if (newSnakePosition[0][0] < 0) {
+    newSnakePosition[0][0] = MATRIX_ROW - 1;
+  }
+  newSnakePosition[0][1] = snakePosition[0][1] + snakeDirection[1];
+  if (newSnakePosition[0][1] > MATRIX_COL - 1) {
+    newSnakePosition[0][1] = 0;
+  }
+  if (newSnakePosition[0][1] < 0) {
+    newSnakePosition[0][1] = MATRIX_COL - 1;
+  }
+
+  //check if snake's head collide with the others snake's pieces. If it is, we end the game.
+  for (byte i = 1; i < numSnakePieces; i++) {
+    if ((newSnakePosition[0][0] == snakePosition[i][0]) && (newSnakePosition[0][1] == snakePosition[i][1])) {
+      gameStarted = false; //endGame
     }
   }
 
-  if (!digitalRead(BUTTON_A)) {
-    delay(80);
-    if (!digitalRead(BUTTON_A)) {
-      barX1--;
-      barX2--;
+
+  //check if snake collide with food
+  if ((newSnakePosition[0][0] == food[0]) && (newSnakePosition[0][1] == food[1])) {
+
+    //clear food position
+    clearMatrixStateBit(food[0], food[1]);
+
+    score++; //increse score
+
+    /*if (score % 2 == 0) { //every two food eaten, increase snake's pieces
+      numSnakePieces++;
+    }*/
+
+    numSnakePieces++;
+
+    if (numSnakePieces > MAXSNAKEPIECES) { //if max pieces rieched, set pieces to max.
+      numSnakePieces = MAXSNAKEPIECES;
+    }
+
+
+    //randomize new food position
+    food[0] = random(0, MATRIX_ROW);
+    food[1] = random(0, MATRIX_COL);
+    //if food position is in the same position of the snake, change position
+    for (byte i = 0; i < numSnakePieces; i++) {
+      if (food[0] == newSnakePosition[i][0] && food[1] == newSnakePosition[i][1] || food[0] == snakePosition[i][0] && food[1] == snakePosition[i][1]) {
+        food[0] = random(0, MATRIX_ROW);
+        food[1] = random(0, MATRIX_COL);
+        i = 0;
+      }
     }
   }
 
-  if (barX2 >= MATRIX_COL) {
-    barX2--;
-    barX1--;
+  //shift the other snake's pieces according to the previous pieces.
+  for (byte i = 1; i < numSnakePieces; i++) {
+    newSnakePosition[i][0] = snakePosition[i - 1][0];
+
+    //adjust snake's piece position
+    if (newSnakePosition[i][0] > MATRIX_ROW - 1) {
+      newSnakePosition[i][0] = 0;
+    }
+    if (newSnakePosition[i][0] < 0) {
+      newSnakePosition[i][0] = MATRIX_ROW - 1;
+    }
+    newSnakePosition[i][1] = snakePosition[i - 1][1];
+    if (newSnakePosition[i][1] > MATRIX_COL - 1) {
+      newSnakePosition[i][1] = 0;
+    }
+    if (newSnakePosition[i][1] < 0) {
+      newSnakePosition[i][1] = MATRIX_COL - 1;
+    }
   }
-  if (barX2 == 0) {
-    barX1++;
-    barX2++;
+
+
+  //delete current snake Position
+
+  for (byte i = 0; i < numSnakePieces; i++) {
+    clearMatrixStateBit(snakePosition[i][0], snakePosition[i][1]); //clear
   }
 
-  //changing only X Ax
-  barNewPosition[0][1] = barX1;
-  barNewPosition[1][1] = barX2;
-
-  //only if the bar position is different
-  // (means that the button was pressed)
-  if (barNewPosition[0][1] != barCurrentPosition[0][1]) {
-
-    //delete current bar Position
-    matrixState[barCurrentPosition[0][0]][barCurrentPosition[0][1]] = 0;
-    matrixState[barCurrentPosition[1][0]][barCurrentPosition[1][1]] = 0;
+  //set current snake Position
+  for (byte i = 0; i < numSnakePieces; i++) {
+    snakePosition[i][0] = newSnakePosition[i][0];
+    snakePosition[i][1] = newSnakePosition[i][1];
+    setMatrixStateBit(snakePosition[i][0], snakePosition[i][1]); //set
   }
-  //set current bar position to new position
-  barCurrentPosition[0][0] = barNewPosition[0][0];
-  barCurrentPosition[0][1] = barNewPosition[0][1];
-  barCurrentPosition[1][0] = barNewPosition[1][0];
-  barCurrentPosition[1][1] = barNewPosition[1][1];
 
-  //show new bar Position
-  matrixState[barNewPosition[0][0]][barNewPosition[0][1]] = 1;
-  matrixState[barNewPosition[1][0]][barNewPosition[1][1]] = 1;
+  //set new food position
+  setMatrixStateBit(food[0], food[1]);
 }
 
 
@@ -564,56 +564,41 @@ void resetGame() {
   //reset all game variables to the start condition
   clearMatrix();
   showKeyChaininoFace();
-  delay(1000);
+  delay(500);
   clearMatrix();
   delay(300);
 
-  //check for programming mode
-  if (!digitalRead(BUTTON_B) && !digitalRead(BUTTON_A)) {
-    //programming mode
-    programmingMode();
+  snakePosition[0][0] = 3;
+  snakePosition[0][1] = 4;
+  snakePosition[1][0] = 3;
+  snakePosition[1][1] = 3;
+  snakePosition[2][0] = 3;
+  snakePosition[2][1] = 2;
+
+  numSnakePieces = 3;
+  snakeDirection[0] = 0;
+  snakeDirection[1] = 1;
+
+  //randomize food position
+  food[0] = random(0, MATRIX_ROW);
+  food[1] = random(0, MATRIX_COL);
+  //if food position is in the same position of the snake, change position
+  for (byte i = 0; i < numSnakePieces; i++) {
+    if (food[0] == snakePosition[i][0] && food[1] == snakePosition[i][1]) {
+      food[0] = random(0, MATRIX_ROW);
+      food[1] = random(0, MATRIX_COL);
+      i = 0;
+    }
   }
 
-
-  barCurrentPosition[0][0] = 0;
-  barCurrentPosition[0][1] = 0;
-  barCurrentPosition[1][0] = 0;
-  barCurrentPosition[1][1] = 0;
-
-  barNewPosition[0][0] = 7;
-  barNewPosition[0][1] = 3;
-  barNewPosition[1][0] = 7;
-  barNewPosition[1][1] = 4;
-
-  barX1 = barNewPosition[0][1];
-  barY1 = barNewPosition[0][0];
-  barX2 = barNewPosition[1][1];
-  barY2 = barNewPosition[1][0];
-
-  ballCurrentPosition[0] = 0;
-  ballCurrentPosition[1] = random(0, MATRIX_COL);
-
-  ballX = ballCurrentPosition[1];
-  ballY = ballCurrentPosition[0];
-
-  ballDirection[0] = 1;
-  ballDirection[1] = 0;
-
-  ballUpdatePositionCounter = 0;
+  matrixState[food[0]][food[1]] = 1; //Set food position
 
   score = 0;
 
   gameStarted = true;
 }
 
-void programmingMode() {
-  while (1) {
-    fullMatrix();
-    delay(300);
-    clearMatrix();
-    delay(300);
-  }
-}
+
 
 void clearMatrix() {
   //clear the matrix by inserting 0 to the matrixState
@@ -673,36 +658,15 @@ void goSleep() {
   bitSet(EIMSK, INT0); //enable interrupt button B - INT0
   bitSet(EIMSK, INT1); //enable interrupt button A - INT1
 
-  // Disable the USB interface
-  bitClear(USBCON, USBE);
-
-  // Disable the VBUS transition enable bit
-  bitClear(USBCON, VBUSTE);
-
-  // Disable the VUSB pad
-  bitClear(USBCON, OTGPADE);
-
-  // Freeze the USB clock
-  bitClear(USBCON, FRZCLK);
-
-  // Disable USB pad regulator
-  bitClear(UHWCON, UVREGE);
-
-  // Clear the IVBUS Transition Interrupt flag
-  bitClear(USBINT, VBUSTI);
-
-  // Physically detact USB (by disconnecting internal pull-ups on D+ and D-)
-  bitSet(UDCON, DETACH);
-
-  power_usb_disable();
-
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 
-  bool falsePush = true;
+  
 
-  /*while (digitalRead(BUTTON_B) || digitalRead(BUTTON_A)) { //until all the two buttons are pressend
+  while (digitalRead(BUTTON_B) || digitalRead(BUTTON_A)) { //until all the two buttons are pressend
     sleep_mode();
-    }*/
+  }
+
+  /*bool falsePush = true;
 
   while (falsePush) {
     if (!digitalRead(BUTTON_B) && !digitalRead(BUTTON_A)) { //until all the two buttons are pressend
@@ -717,7 +681,7 @@ void goSleep() {
     } else {
       sleep_mode();
     }
-  }
+    }*/
 
   //disable interrupt buttons after sleep
   bitClear(EIMSK, INT0); //enable interrupt button B - INT0
@@ -725,10 +689,5 @@ void goSleep() {
 
   power_timer0_enable(); //enable Timer 0
   power_timer1_enable(); //enable Timer 1
-
-  power_usb_enable();
-
-  USBDevice.attach();
-  // delay(100);
 
 }
