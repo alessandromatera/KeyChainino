@@ -1,0 +1,35 @@
+#######################################
+# Syntax Coloring Map For Chaplex
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Chaplex		KEYWORD1
+charlieLed	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+ledWrite	KEYWORD2
+allClear	KEYWORD2
+outRow	KEYWORD2
+scrollText	KEYWORD2
+pixel	KEYWORD2
+init	KEYWORD2
+drawBitmap	KEYWORD2
+goSleep	KEYWORD2
+full	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+ON	LITERAL1
+OFF	LITERAL1
+MATRIX_ROW	LITERAL1
+MATRIX_COL	LITERAL1
+ROW_SIZE	LITERAL1
+COL_SIZE	LITERAL1

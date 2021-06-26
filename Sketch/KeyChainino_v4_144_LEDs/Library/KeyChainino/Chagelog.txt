@@ -1,0 +1,6 @@
+REV0
+working with modified LED matrix connection. Using Sparkfun library hacked.
+
+REV1
+
+trying to use Sparkfun functions in a custom library
