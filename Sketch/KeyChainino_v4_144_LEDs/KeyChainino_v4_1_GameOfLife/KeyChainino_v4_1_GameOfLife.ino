@@ -55,7 +55,7 @@ void setup() {
 
   // Initialize and clear display
 
-  randomSeed(analogRead(A0));  //consume lot of energy in standby
+  randomSeed(analogRead(A0));
 
 
   KC.init();
