@@ -11,7 +11,7 @@
 #define MATRIX_COLS 12
 
 // Timing
-#define TURN_DELAY 150       // ms between generations
+#define TURN_DELAY 250       // ms between generations
 #define TURNS_MAX 150        // max generations before reset
 #define NO_CHANGES_RESET 10  // reset after this many static generations
 
