@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+
+# Compiler output (arduino-cli --output-dir build, listings, stray hex in sketch folders)
+/build/
+*.elf
+*.eep
+*.lst
+*.with_bootloader.*
+Sketch/**/*.hex
