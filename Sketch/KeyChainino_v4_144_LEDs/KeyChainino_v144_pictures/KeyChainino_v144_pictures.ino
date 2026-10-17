@@ -26,9 +26,9 @@
   Build: node tools/build.mjs   (regenerates pictures_data.*, compiles,
   and embeds the firmware + picture library into the web page)
 
-  board.h, display.*, gfx.* and power.* are copies of the shared v144
-  engine in ../KeyChainino_v144_library (edit there, then run its
-  sync.sh); input.* is this sketch's own, tuned for a 3-year-old.
+  board.h, display.*, gfx.* and power.* are the shared v144 engine, the
+  same files in every v144 sketch folder; input.* is this sketch's own,
+  tuned for a 3-year-old.
 
   created by Alessandro Matera
 * ************************************************************************/

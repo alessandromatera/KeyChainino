@@ -110,6 +110,6 @@ node tests/test_page.mjs      # page core vs a simulated USBasp + chip, then tha
   `build/pictures/` (next to this repo) or the temp dir.
 - The tests use the simulator in the workspace (`simulator/src/core.mjs`,
   next to this repo, with `npm install` done there).
-- `board.h`, `display.*`, `gfx.*`, `power.*` are copies of
-  `../KeyChainino_v144_library` — edit there and run its `sync.sh`.
-  `input.*`, `album.*` and `show.*` belong to this sketch.
+- `board.h`, `display.*`, `gfx.*`, `power.*` are the shared v144 engine,
+  the same files in every v144 sketch folder. `input.*`, `album.*` and
+  `show.*` belong to this sketch.

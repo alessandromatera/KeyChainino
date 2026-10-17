@@ -26,16 +26,14 @@ folder is self-contained: everything it needs sits next to the `.ino`, and
 there is no library to install.
 
 - **`KeyChainino_v144_*`**: sketches on the shared engine (greyscale
-  charlieplex driver, gfx, power-down sleep).
-- **`KeyChainino_v144_library/`**: the canonical copy of the engine files
-  (`board.h`, `display.*`, `gfx.*`, `power.*`). Arduino only compiles files
-  in the sketch folder, so every sketch carries its own copy. Edit the
-  engine there, run `./sync.sh` to copy it into every sketch, then recompile
-  each of them. `./sync.sh --check` reports any sketch that is out of date.
-  `input.*` is deliberately per-sketch, because every game tunes its own
-  button handling. See the folder's README for the engine's change log.
+  charlieplex driver, gfx, power-down sleep). The engine files
+  (`board.h`, `display.*`, `gfx.*`, `power.*`) are the same in every one of
+  these folders: Arduino only compiles files in the sketch folder, so each
+  sketch carries its own copy. If you change one of them, copy it into the
+  other sketch folders too and recompile them. `input.*` is deliberately
+  per-sketch, because every game tunes its own button handling.
 - **`KeyChainino_pet`, `KeyChainino_watch`**: built on the original
-  KeyChainino library, with their own copy of it bundled in the folder.
+  KeyChainino driver (`KeyChainino.h/.cpp`), copied into the folder.
 - **`test_charlie`**: a bare-metal LED matrix test.
 
 New sketches go in their own `KeyChainino_v144_<name>/` folder, holding

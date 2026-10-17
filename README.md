@@ -31,7 +31,6 @@ Every sketch folder is self-contained, with no library to install:
 | `KeyChainino_pet` | A virtual pet to feed, clean and play with |
 | `KeyChainino_watch` | A clock: A+B shows the time |
 | `test_charlie` | LED matrix test |
-| `KeyChainino_v144_library` | The shared engine (display, graphics, sleep), copied into each sketch by `sync.sh` |
 
 ## Building and flashing
 
@@ -47,8 +46,8 @@ avrdude -patmega328p -cusbasp -Pusb \
   -U flash:w:build/KeyChainino_v144_multigame.ino.hex:i
 ```
 
-See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for the hardware limits,
-the shared engine and the classic library.
+See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for the hardware limits
+and how the sketch folders are organized.
 
 ## Simulator
 
