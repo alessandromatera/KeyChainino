@@ -1,6 +1,8 @@
 /*
  * power.h — power-down sleep, woken by the classic A+B gesture.
- * ~1uA in sleep: BOD off, all timers gated, every LED line Hi-Z.
+ * About 1uA typical in sleep (the automotive datasheet only guarantees
+ * 40uA max over its full temperature range): brown-out detector off by
+ * fuse, every LED line Hi-Z, nothing clocked.
  */
 #ifndef RETHINK_POWER_H
 #define RETHINK_POWER_H

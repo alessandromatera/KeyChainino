@@ -1,0 +1,1848 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KeyChainino Pictures</title>
+<style>
+  :root{
+    --cream:#fff5e4; --ink:#3b2f4a; --ink2:#7a6c86; --line:#eadfcb;
+    --pcb:#f6f7f6; --pcb2:#e7eae8; --led-off:#ddd6c6; --led-on:#ff2d55; --led-dim:#c98b98;
+    --yellow:#ffcf3f; --sky:#4cc9f0; --leaf:#5fd68c; --grape:#a77bff; --tomato:#ff5a4e; --orange:#ff9f1c;
+    /* the real board: 25 mm wide, 48 mm tall with its tab. Everything on
+       it is sized from its width --w (the whole device is ~2 w tall, so it
+       fills the window height); the 12x12 matrix --pad spans 93% of it */
+    --w: min(calc((100svh - 104px) / 2), calc(100vw - 480px), 560px);
+    --pad: calc(var(--w) * .93);
+    --round: ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", "Arial Rounded MT Bold", system-ui, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--ink); font:16px/1.4 var(--round);
+    background:
+      radial-gradient(40vmax 40vmax at 8% 12%, #ffe0ec 0, transparent 60%),
+      radial-gradient(38vmax 38vmax at 95% 20%, #dff3ff 0, transparent 60%),
+      radial-gradient(45vmax 45vmax at 70% 105%, #e6ffe9 0, transparent 60%),
+      var(--cream);
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
+    user-select:none; -webkit-user-select:none; -webkit-tap-highlight-color:transparent;
+  }
+  button{font:inherit; color:inherit; cursor:pointer; border:0; background:none}
+  button:focus-visible{outline:4px solid var(--sky); outline-offset:3px}
+
+  /* ── header ───────────────────────────────────────────────────── */
+  header{display:flex; align-items:center; gap:12px; padding:14px 20px 0}
+  .logo{font-weight:900; font-size:26px; letter-spacing:-.5px; display:flex; align-items:center; gap:10px}
+  .logo .dots{display:grid; grid-template-columns:repeat(3,9px); gap:3px}
+  .logo .dots i{width:9px; height:9px; border-radius:50%; background:var(--led-off)}
+  .logo .dots i.on{background:var(--led-on); box-shadow:0 0 6px rgba(255,45,85,.6)}
+  .logo small{font-size:15px; font-weight:800; color:#fff; background:var(--grape); padding:3px 10px; border-radius:99px; letter-spacing:0}
+  .spacer{flex:1}
+  .hbtn{width:48px; height:48px; border-radius:50%; background:#fff; box-shadow:0 3px 0 var(--line); font-size:22px; display:grid; place-items:center; position:relative}
+  .hbtn:active{transform:translateY(2px); box-shadow:0 1px 0 var(--line)}
+  #btnGrown{--p:0}
+  #btnGrown::after{content:""; position:absolute; inset:-5px; border-radius:50%;
+    background:conic-gradient(var(--grape) calc(var(--p)*1turn), transparent 0);
+    -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 5px), #000 0);
+            mask:radial-gradient(farthest-side, transparent calc(100% - 5px), #000 0)}
+  .hint{font-size:13px; color:var(--ink2); white-space:nowrap}
+
+  /* ── stage ────────────────────────────────────────────────────── */
+  main{display:grid; grid-template-columns:auto auto; justify-content:center; align-items:center; gap:44px; padding:8px 20px 20px}
+  .side{display:flex; flex-direction:column; gap:26px; width:min(400px, calc(100vw - var(--w) - 110px))}
+
+  /* ── the KeyChainino 144, drawn after the real board ──────────────
+     White soldermask, no outlines (the drop shadow is the edge); the tab
+     and the body read as one PCB, with a real hole through the tab. */
+  .device{position:relative; display:flex; flex-direction:column; align-items:center; transition:transform .25s;
+    filter:drop-shadow(0 16px 20px rgba(70,45,20,.3)) drop-shadow(0 2px 2px rgba(0,0,0,.12))}
+  .tab{width:calc(var(--w)*.39); height:calc(var(--w)*.36); margin-bottom:calc(var(--w)*-.02); background:#f2f3f3;
+    border-radius:calc(var(--w)*.09) calc(var(--w)*.09) 0 0;
+    -webkit-mask:radial-gradient(circle calc(var(--w)*.085) at 50% 42%, transparent 96%, #000 100%);
+            mask:radial-gradient(circle calc(var(--w)*.085) at 50% 42%, transparent 96%, #000 100%)}
+  .pcb{width:var(--w); position:relative; z-index:0; border-radius:calc(var(--w)*.045);
+    background:linear-gradient(180deg,#f2f3f3,#e1e3e2); padding:calc(var(--w)*.035) calc(var(--w)*.035) calc(var(--w)*.03)}
+  .pcb::before,.pcb::after{ /* rounded inside corners where the tab meets the body */
+    content:""; position:absolute; top:calc(var(--w)*-.04); width:calc(var(--w)*.04); height:calc(var(--w)*.04)}
+  .pcb::before{right:calc(50% + var(--w)*.195); background:radial-gradient(circle at 0 0, transparent 70%, #f2f3f3 72%)}
+  .pcb::after{left:calc(50% + var(--w)*.195); background:radial-gradient(circle at 100% 0, transparent 70%, #f2f3f3 72%)}
+  .device.wiggle{animation:wiggle .5s}
+  @keyframes wiggle{20%{transform:rotate(-3deg)}40%{transform:rotate(3deg)}60%{transform:rotate(-2deg)}80%{transform:rotate(1deg)}}
+  .device.launch{animation:launch .7s cubic-bezier(.3,.1,.3,1)}
+  @keyframes launch{30%{transform:translateY(8px) scale(.98)}60%{transform:translateY(-14px) scale(1.02)}}
+  .device.pen .pcb{box-shadow:0 0 0 calc(var(--w)*.014) rgba(167,123,255,.6)}
+  .device.pen .leds{cursor:crosshair}
+
+  /* the 12x12 matrix: big round lights rather than the real board's tiny
+     SMD LEDs — much easier for small fingers to aim at and to read */
+  .leds{display:grid; grid-template-columns:repeat(12,1fr); grid-template-rows:repeat(12,1fr); gap:calc(var(--pad)*.012);
+    width:var(--pad); height:var(--pad); touch-action:none; cursor:pointer; position:relative}
+  .leds i{border-radius:50%; background:radial-gradient(circle at 35% 30%, #ece7db, var(--led-off) 60%);
+    box-shadow:inset 0 -2px 3px rgba(0,0,0,.08); transition:background .12s, box-shadow .12s}
+  .leds i.on{background:radial-gradient(circle at 38% 32%, #ffd0da 0, #ff6d86 30%, var(--led-on) 62%, #d1123b 100%);
+    box-shadow:0 0 calc(var(--pad)*.025) rgba(255,45,85,.75), 0 0 calc(var(--pad)*.007) #fff inset}
+  .leds i.dim{background:radial-gradient(circle at 38% 32%, #f3d7dd, var(--led-dim) 65%); box-shadow:0 0 calc(var(--pad)*.012) rgba(255,45,85,.3)}
+  .leds i.pop{animation:pop .22s}
+  @keyframes pop{40%{transform:scale(1.3)}}
+  .leds.busy{cursor:default}
+
+  /* ISP pads (pin 1 square), two passives, the ATmega328P with its pins */
+  .mid{display:flex; align-items:center; height:calc(var(--w)*.3); padding:0 calc(var(--w)*.04) 0 calc(var(--w)*.035)}
+  .isp{display:grid; grid-template-columns:repeat(3,calc(var(--w)*.05)); grid-auto-rows:calc(var(--w)*.05); gap:calc(var(--w)*.022)}
+  .isp i{border-radius:50%; background:radial-gradient(circle, #3a3b3f 30%, #d9dcdf 36%, #b3b7bb 72%, transparent 75%)}
+  .isp i:nth-child(3){border-radius:12%; background:radial-gradient(circle, #3a3b3f 30%, transparent 34%), linear-gradient(160deg,#d9dcdf,#b3b7bb)}
+  .passives{display:flex; flex-direction:column; gap:calc(var(--w)*.03); margin:0 auto 0 calc(var(--w)*.07)}
+  .passives i{width:calc(var(--w)*.075); height:calc(var(--w)*.03); border-radius:1px;
+    background:linear-gradient(90deg,#b4b7ba 0 22%,#ece9e2 22% 78%,#b4b7ba 78%); box-shadow:0 1px 1px rgba(0,0,0,.18)}
+  .mcu{width:calc(var(--w)*.17); height:calc(var(--w)*.17); position:relative; border-radius:calc(var(--w)*.01);
+    background:radial-gradient(circle at 18% 82%, rgba(255,255,255,.22) 0 5%, transparent 7%), linear-gradient(150deg,#2a2b30,#111216 60%);
+    box-shadow:0 1px 2px rgba(0,0,0,.3)}
+  .mcu::before,.mcu::after{content:""; position:absolute; z-index:-1}
+  .mcu::before{top:calc(var(--w)*-.014); bottom:calc(var(--w)*-.014); left:12%; right:12%;
+    background:repeating-linear-gradient(90deg,#b0b3b7 0 6.5%,transparent 6.5% 13%)}
+  .mcu::after{left:calc(var(--w)*-.014); right:calc(var(--w)*-.014); top:12%; bottom:12%;
+    background:repeating-linear-gradient(0deg,#b0b3b7 0 6.5%,transparent 6.5% 13%)}
+
+  /* tact switches: square metal body, black round cap, legs out both sides;
+     A / B silkscreen upright at the board edges */
+  .keys{display:flex; align-items:center; justify-content:space-between; height:calc(var(--w)*.32); padding:0 calc(var(--w)*.025)}
+  .silk{font:700 calc(var(--w)*.055)/1 var(--mono); color:#6a6f74}
+  .pair{display:flex; gap:calc(var(--w)*.13)}
+  .tact{width:calc(var(--w)*.22); height:calc(var(--w)*.22); border-radius:calc(var(--w)*.02); position:relative;
+    background:linear-gradient(155deg,#f2f3f4,#b6babe 72%);
+    box-shadow:0 2px 3px rgba(0,0,0,.3), inset 0 0 0 calc(var(--w)*.006) #9ea3a8}
+  .tact::before,.tact::after{ /* z -1 lands in .pcb's stacking context: behind the body, above the board */
+    content:""; position:absolute; left:-13%; right:-13%; height:15%; z-index:-1;
+    background:linear-gradient(#e7e9eb,#a3a7ab); border-radius:2px}
+  .tact::before{top:10%} .tact::after{bottom:10%}
+  .tact .cap{position:absolute; inset:20%; border-radius:50%; background:radial-gradient(circle at 34% 28%, #4a4e54, #0e0f11 72%);
+    box-shadow:0 3px 5px rgba(0,0,0,.5), inset 0 1px 1px rgba(255,255,255,.2); transition:transform .06s, box-shadow .06s}
+  .tact:active .cap{transform:scale(.93); box-shadow:0 1px 2px rgba(0,0,0,.6), inset 0 2px 4px rgba(0,0,0,.5)}
+
+  /* ── tools ────────────────────────────────────────────────────── */
+  .tools{display:grid; grid-template-columns:repeat(2,auto); gap:16px 18px; align-items:start; justify-items:center}
+  .tool{display:flex; flex-direction:column; align-items:center; gap:6px; font-weight:800; font-size:14px; color:var(--ink2)}
+  .tool .face{width:84px; height:84px; border-radius:50%; display:grid; place-items:center; font-size:40px;
+    background:var(--c); box-shadow:0 6px 0 color-mix(in srgb, var(--c) 70%, #000), 0 10px 18px -8px rgba(0,0,0,.3);
+    transition:transform .1s, box-shadow .1s}
+  .tool:active .face{transform:translateY(5px); box-shadow:0 1px 0 color-mix(in srgb, var(--c) 70%, #000)}
+  .tool:disabled{opacity:.45; cursor:not-allowed}
+  .tool.send{grid-column:1 / -1; margin-top:6px; font-size:18px; color:var(--ink)}
+  .tool.send .face{width:136px; height:136px; font-size:66px; position:relative;
+    background:radial-gradient(circle at 35% 30%, #ffc36b, var(--orange) 45%, var(--tomato));}
+  .tool.send .face::after{content:""; position:absolute; inset:-9px; border-radius:50%;
+    background:conic-gradient(var(--leaf) calc(var(--p,0)*1turn), transparent 0);
+    -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 8px), #000 0);
+            mask:radial-gradient(farthest-side, transparent calc(100% - 8px), #000 0)}
+  .tool.send.busy .face span{animation:shake .25s infinite}
+  .tool.send.busy .face::before{ /* the ring's track: visible the moment Send is pressed */
+    content:""; position:absolute; inset:-9px; border-radius:50%; background:rgba(95,214,140,.28);
+    -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 8px), #000 0);
+            mask:radial-gradient(farthest-side, transparent calc(100% - 8px), #000 0)}
+  @keyframes shake{25%{transform:translate(-2px,1px) rotate(-6deg)}75%{transform:translate(2px,-1px) rotate(6deg)}}
+  .tool.send.idle .face{animation:breathe 2.4s ease-in-out infinite}
+  @keyframes breathe{50%{transform:scale(1.05)}}
+
+  .bubble{position:absolute; left:50%; bottom:calc(100% + 16px); transform:translateX(-50%) scale(.6); opacity:0;
+    background:#fff; border-radius:18px; padding:10px 16px; font-weight:900; font-size:19px; white-space:nowrap;
+    box-shadow:0 8px 20px -8px rgba(0,0,0,.35); transition:transform .25s cubic-bezier(.2,1.6,.4,1), opacity .2s; pointer-events:none; z-index:5}
+  .bubble::after{content:""; position:absolute; left:50%; top:100%; border:10px solid transparent; border-top-color:#fff; transform:translateX(-50%)}
+  .bubble.show{transform:translateX(-50%) scale(1); opacity:1}
+
+  /* ── shelf ────────────────────────────────────────────────────── */
+  .shelf{background:#fff; border-radius:24px; padding:12px 14px 14px; box-shadow:0 6px 0 var(--line)}
+  .shelf h2{margin:0 0 8px; font-size:16px; font-weight:900; display:flex; align-items:center; gap:8px}
+  .shelf h2 .count{font-size:13px; color:var(--ink2); font-weight:700}
+  .shelf .when{font-size:11.5px; color:var(--ink2); font-weight:600; text-align:right; margin-top:2px}
+  .manage{--p:0; margin-left:auto; width:34px; height:34px; border-radius:50%; background:var(--cream); font-size:16px; position:relative; flex:none}
+  .manage::after{content:""; position:absolute; inset:-4px; border-radius:50%;
+    background:conic-gradient(var(--tomato) calc(var(--p)*1turn), transparent 0);
+    -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 4px), #000 0);
+            mask:radial-gradient(farthest-side, transparent calc(100% - 4px), #000 0)}
+  .strip{display:grid; grid-template-columns:repeat(auto-fill, 76px); gap:12px; padding:4px 2px 6px; max-height:186px; overflow-y:auto}
+  .thumb{flex:none; width:76px; height:76px; border-radius:16px; background:#2c2530; padding:7px; scroll-snap-align:start;
+    box-shadow:0 4px 0 #18131b; transition:transform .1s}
+  .thumb:active{transform:translateY(3px); box-shadow:0 1px 0 #18131b}
+  .thumb canvas{width:100%; height:100%; display:block}
+  .thumb.new{animation:arrive .6s cubic-bezier(.2,1.6,.4,1)}
+  @keyframes arrive{from{transform:scale(0) rotate(-20deg)}}
+  .empty{grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:12px; color:var(--ink2); font-size:14px; align-items:center}
+  .empty i{width:76px; height:76px; border-radius:16px; border:3px dashed var(--line); flex:none}
+
+  /* ── sticker sheet ────────────────────────────────────────────── */
+  .sheet{position:fixed; inset:0; background:rgba(59,47,74,.45); display:none; z-index:20; padding:min(4vh,30px) min(4vw,30px)}
+  .sheet.open{display:block}
+  .sheet .card{height:100%; max-width:1100px; margin:0 auto; background:var(--cream); border-radius:28px; display:flex; flex-direction:column; overflow:hidden;
+    animation:rise .3s cubic-bezier(.2,1.3,.4,1)}
+  @keyframes rise{from{transform:translateY(40px); opacity:0}}
+  .sheet .top{display:flex; align-items:center; gap:10px; padding:14px 18px}
+  .sheet .top h2{margin:0; font-size:22px; font-weight:900}
+  .close{width:60px; height:60px; border-radius:50%; background:var(--tomato); color:#fff; font-size:30px; font-weight:900; box-shadow:0 5px 0 #c63a30}
+  .close:active{transform:translateY(4px); box-shadow:0 1px 0 #c63a30}
+  .groups{overflow-y:auto; padding:0 18px 24px}
+  .groups h3{font-size:30px; margin:14px 0 8px}
+  .tiles{display:grid; grid-template-columns:repeat(auto-fill, minmax(118px,1fr)); gap:14px}
+  .tile{position:relative; background:#2c2530; border-radius:20px; padding:10px 10px 6px; box-shadow:0 5px 0 #18131b; color:#fff; font-weight:800; font-size:13px}
+  .tile:active{transform:translateY(4px); box-shadow:0 1px 0 #18131b}
+  .tile canvas{width:100%; aspect-ratio:1; display:block}
+  .tile span{display:block; margin-top:4px; opacity:.75}
+  .tile .badge{position:absolute; top:4px; right:6px; font-size:18px; display:none}
+  .tile.ondevice .badge{display:block}
+
+  /* ── grown-ups panel ──────────────────────────────────────────── */
+  .panel{position:fixed; inset:0; background:rgba(30,24,36,.5); display:none; z-index:30; justify-content:flex-end}
+  .panel.open{display:flex}
+  .panel .drawer{width:min(560px,100vw); height:100%; overflow-y:auto; background:#fcfbf9; color:#2a2530; padding:20px 22px 40px;
+    font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; user-select:text; -webkit-user-select:text; animation:slide .25s ease-out}
+  @keyframes slide{from{transform:translateX(40px); opacity:0}}
+  .drawer h2{font-size:20px; margin:0; flex:1}
+  .drawer h3{font-size:12px; letter-spacing:.8px; text-transform:uppercase; color:#857c8c; margin:22px 0 8px}
+  .drawer .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .drawer .btn{border:1px solid #ddd5e3; background:#fff; border-radius:10px; padding:9px 14px; font-weight:600; font-size:14px}
+  .drawer .btn:hover:not(:disabled){border-color:#b9a9c7}
+  .drawer .btn.primary{background:#6d4ad6; color:#fff; border-color:#6d4ad6}
+  .drawer .btn.danger{color:#c1272d}
+  .drawer .btn:disabled{opacity:.45; cursor:not-allowed}
+  .drawer .x{width:40px; height:40px; border-radius:50%; background:#efe9f3; font-size:20px}
+  .status{display:grid; grid-template-columns:auto 1fr; gap:6px 12px; font-size:14px; background:#fff; border:1px solid #ece6ef; border-radius:12px; padding:12px 14px}
+  .status dt{color:#857c8c}
+  .status dd{margin:0}
+  .dot{display:inline-block; width:9px; height:9px; border-radius:50%; background:#bbb; margin-right:6px; vertical-align:1px}
+  .dot.on{background:#2fb35a} .dot.busy{background:#e0a106; animation:blink 1s infinite} .dot.bad{background:#e0443c}
+  @keyframes blink{50%{opacity:.3}}
+  .bar{height:8px; border-radius:99px; background:#eee8f1; overflow:hidden; margin-top:10px}
+  .bar i{display:block; height:100%; width:0; background:#6d4ad6; transition:width .12s linear}
+  .phase{font-size:13px; color:#857c8c; margin-top:6px; font-family:var(--mono)}
+  .mgr{display:grid; grid-template-columns:repeat(auto-fill, minmax(84px,1fr)); gap:10px}
+  .mgr .m{position:relative; background:#2c2530; border-radius:12px; padding:6px}
+  .mgr canvas{width:100%; aspect-ratio:1; display:block}
+  .mgr .del{position:absolute; top:-8px; right:-8px; min-width:28px; height:28px; padding:0 6px; border-radius:99px; background:#fff; border:1px solid #ddd5e3; font-size:13px; font-weight:700; color:#c1272d}
+  .mgr .m.gone{opacity:.35}
+  .mgr .m.new{box-shadow:0 0 0 3px #2fb35a}
+  .mgr button.m{border:0; cursor:pointer; color:#fff; font:600 11px/1.2 system-ui,sans-serif}
+  .mgr button.m span{display:block; margin-top:3px; opacity:.75; text-align:center}
+  .mgr button.m:hover{outline:3px solid #6d4ad6}
+  .savebar{position:sticky; bottom:-40px; background:#fcfbf9; padding:12px 0 14px; margin-top:12px; border-top:1px solid #ece6ef; z-index:2}
+  .note{font-size:13px; color:#6f6676}
+  .drawer ol{padding-left:20px; margin:6px 0} .drawer li{margin:3px 0}
+  .drawer select{font:inherit; font-size:14px; border:1px solid #ddd5e3; border-radius:8px; padding:5px 8px; background:#fff}
+  .drawer label{display:inline-flex; align-items:center; gap:8px}
+  #log{font:12px/1.6 var(--mono); background:#221d27; color:#e8e1ee; border-radius:10px; padding:10px 12px; height:220px; overflow-y:auto; white-space:pre-wrap; word-break:break-word}
+  #log .w{color:#f2c260} #log .e{color:#ff8a80} #log .g{color:#86e3a1} #log .d{color:#a99fb1}
+
+  /* ── modal ────────────────────────────────────────────────────── */
+  .modal{position:fixed; inset:0; background:rgba(30,24,36,.5); display:none; z-index:40; place-items:center; padding:20px}
+  .modal.open{display:grid}
+  .modal .box{background:#fff; border-radius:22px; max-width:440px; padding:24px; font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; box-shadow:0 30px 60px -20px rgba(0,0,0,.5)}
+  .modal .big{font-size:46px; line-height:1}
+  .modal h2{margin:10px 0 6px; font-size:19px}
+  .modal p{margin:0 0 16px; color:#4b4352}
+  .modal .row{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end}
+  .modal .btn{border:1px solid #ddd5e3; background:#fff; border-radius:10px; padding:10px 16px; font-weight:600}
+  .modal .btn.primary{background:#6d4ad6; color:#fff; border-color:#6d4ad6}
+
+  #confetti{position:fixed; inset:0; pointer-events:none; z-index:50}
+
+  @media (max-width: 860px){
+    :root{--w: min(calc(100vw - 48px), calc((100svh - 260px) / 2), 480px)}
+    main{grid-template-columns:auto; justify-items:center; gap:22px}
+    .side{width:min(100%, 640px)}
+    .tools{grid-template-columns:repeat(5,auto); gap:10px; align-items:end}
+    .tool .face{width:60px; height:60px; font-size:28px}
+    .tool{font-size:12px}
+    .tool.send{grid-column:auto; margin:0}
+    .tool.send .face{width:84px; height:84px; font-size:42px}
+    .hint{display:none}
+  }
+  @media (max-width: 420px){
+    :root{--w: min(calc(100vw - 40px), calc((100svh - 240px) / 2))}
+    .tools{gap:6px}
+    .tool .face{width:52px; height:52px; font-size:24px}
+    .tool.send .face{width:70px; height:70px; font-size:34px}
+    .logo{font-size:21px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo" aria-label="KeyChainino Pictures">
+    <span class="dots" aria-hidden="true"><i class="on"></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i class="on"></i></span>
+    KeyChainino <small>pictures</small>
+  </div>
+  <div class="spacer"></div>
+  <span class="hint">hold <b>space</b> and move to draw · grown-ups: hold ⚙️</span>
+  <button class="hbtn" id="btnSound" aria-label="Sound on or off">🔊</button>
+  <button class="hbtn" id="btnGrown" aria-label="Grown-ups settings (press and hold)">⚙️</button>
+</header>
+
+<main>
+  <div class="device" id="board">
+    <div class="tab" aria-hidden="true"></div>
+    <div class="pcb">
+      <div class="leds" id="leds" role="grid" aria-label="Drawing board: tap the lights to switch them on and off, or hold space and move"></div>
+      <div class="mid" aria-hidden="true">
+        <div class="isp"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="passives"><i></i><i></i></div>
+        <div class="mcu"></div>
+      </div>
+      <div class="keys">
+        <span class="silk" aria-hidden="true">A</span>
+        <div class="pair">
+          <button class="tact" id="keyA" aria-label="Button A: make it dance"><span class="cap"></span></button>
+          <button class="tact" id="keyB" aria-label="Button B: make it dance"><span class="cap"></span></button>
+        </div>
+        <span class="silk" aria-hidden="true">B</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="side">
+  <div class="tools">
+    <button class="tool" id="tUndo" style="--c:var(--yellow)" aria-label="Undo"><span class="face">↩️</span>Undo</button>
+    <button class="tool" id="tClear" style="--c:var(--sky)" aria-label="Clear the board"><span class="face">🧽</span>Clear</button>
+    <button class="tool" id="tStickers" style="--c:var(--leaf)" aria-label="Pictures to start from"><span class="face">🐻</span>Pictures</button>
+    <button class="tool" id="tDance" style="--c:var(--grape)" aria-label="Make it dance"><span class="face">✨</span>Dance</button>
+    <button class="tool send idle" id="tSend" aria-label="Send to my KeyChainino">
+      <span class="bubble" id="bubble"></span>
+      <span class="face"><span>🚀</span></span>Send!
+    </button>
+  </div>
+
+  <section class="shelf" aria-label="Pictures on my KeyChainino">
+    <h2>🔑 On my KeyChainino <span class="count" id="shelfCount"></span>
+      <button class="manage" id="btnManage" title="Grown-ups: hold to choose what is on the KeyChainino" aria-label="Choose the pictures on the KeyChainino (grown-ups: press and hold)">✏️</button></h2>
+    <div class="strip" id="strip"></div>
+    <div class="when" id="shelfWhen"></div>
+  </section>
+  </div>
+</main>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Pictures">
+  <div class="card">
+    <div class="top"><h2>Pick a picture!</h2><div class="spacer"></div><button class="close" id="sheetClose" aria-label="Close">✕</button></div>
+    <div class="groups" id="groups"></div>
+  </div>
+</div>
+
+<div class="panel" id="panel" role="dialog" aria-modal="true" aria-label="Grown-ups">
+  <div class="drawer">
+    <div class="row"><h2>For grown-ups</h2><button class="x" id="panelClose" aria-label="Close">✕</button></div>
+
+    <h3>Status</h3>
+    <dl class="status">
+      <dt>Programmer</dt><dd><span class="dot" id="progDot"></span><span id="progTxt">not connected</span></dd>
+      <dt>KeyChainino</dt><dd id="kcTxt">not checked yet</dd>
+      <dt>Drawings</dt><dd id="albumTxt">—</dd>
+      <dt>This page</dt><dd id="fwTxt">—</dd>
+    </dl>
+    <div class="bar" id="bar"><i></i></div>
+    <div class="phase" id="phase">Idle</div>
+
+    <h3>Actions</h3>
+    <div class="row">
+      <button class="btn primary" id="gConnect">Connect USBasp</button>
+      <button class="btn" id="gRead">Read KeyChainino</button>
+      <button class="btn" id="gInstall">Install / update Pictures program</button>
+    </div>
+
+    <h3 id="mgrTitle">On the KeyChainino</h3>
+    <p class="note" id="mgrNote">Read the KeyChainino to see and change what is on it.</p>
+    <p class="note" id="mgrHelp" hidden>The drawings come first, then the chosen pictures. × takes one off (↺ keeps it after all).
+       Nothing changes on the KeyChainino until you press <b>Save</b>.</p>
+    <div class="mgr" id="mgrOn"></div>
+    <h3 id="libTitle" hidden>Add pictures — tap to put one on the KeyChainino</h3>
+    <div class="mgr" id="mgrLib"></div>
+    <div class="row savebar">
+      <button class="btn primary" id="gSave" disabled>Save to KeyChainino</button>
+      <button class="btn" id="gDiscard" disabled>Undo changes</button>
+      <button class="btn" id="gRead2">Read from KeyChainino</button>
+      <button class="btn danger" id="gWipe" disabled>Take off all my drawings</button>
+      <span class="note" id="mgrEmpty" hidden>Keep at least one picture on it.</span>
+    </div>
+
+    <h3>Settings</h3>
+    <div class="row">
+      <label><input type="checkbox" id="optSound" checked> Sounds</label>
+      <label>ISP speed
+        <select id="optSck">
+          <option value="10" selected>375 kHz</option>
+          <option value="11">750 kHz</option>
+          <option value="9">187.5 kHz</option>
+          <option value="8">93.75 kHz</option>
+        </select>
+      </label>
+    </div>
+
+    <h3>How it works</h3>
+    <ol class="note">
+      <li>Use Chrome or Edge on a computer (WebUSB). Plug a USBasp into USB.</li>
+      <li>Connect the ISP cable to the KeyChainino's 2×3 pads (pin 1 is the square pad).</li>
+      <li>Drawing: tap a light, or press and drag. Easier for small hands: hold the <b>space bar</b> and just move the mouse over the lights. The first light
+          touched decides: off → the stroke switches lights on, on → it switches them off.</li>
+      <li>The KeyChainino shows your child's drawings and the pictures you chose (at first: smile, heart, star,
+          dog, car). Hold ✏️ on the shelf to add or take off pictures and drawings, then Save.</li>
+      <li>Your child draws (or picks a picture), then presses 🚀. A picture picked and left unchanged goes on
+          with its animation; anything drawn or changed goes on as a drawing. The first time, the page installs the Pictures program (about 15 s). This replaces any games on the KeyChainino.</li>
+      <li>Every send after that only writes the drawing (about a second). The KeyChainino restarts and shows it straight away.</li>
+      <li>On the KeyChainino: A / B flip through the pictures, A+B together makes the picture move. It sleeps after 30 s; press A+B to wake it.</li>
+    </ol>
+    <p class="note">Up to 40 drawings fit. When it is full, sending a new one removes the oldest.</p>
+
+    <h3>Log</h3>
+    <div id="log"></div>
+  </div>
+</div>
+
+<div class="modal" id="modal" role="alertdialog" aria-modal="true">
+  <div class="box">
+    <div class="big" id="mIcon">🔧</div>
+    <h2 id="mTitle"></h2>
+    <p id="mText"></p>
+    <div class="row" id="mBtns"></div>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Core: USBasp transport, ISP programming, the EEPROM album. No DOM in
+     here (../tests/test_page.mjs runs it headless against a
+     simulated programmer + chip).
+     ═══════════════════════════════════════════════════════════════════ -->
+<script id="core">
+"use strict";
+
+/* Payloads, rewritten in place by ../tools/build.mjs */
+/*LIB_BEGIN*/
+const FX_NAMES = ["hop","jelly","sparkle","wave","flip","beat","burst","spin"];
+const ON_DEVICE_AT_START = [0,1,14,21,48];
+const LIBRARY = [{"id":"smile","uid":0,"name":"Smile","group":"faces","frames":[[504,516,1026,2457,2457,2049,2565,2313,2289,1026,516,504],[504,516,1026,2073,2457,2049,2565,2313,2289,1026,516,504],[504,516,1026,2049,2457,2049,2565,2313,2289,1026,516,504],[504,516,1026,2457,2457,2049,3069,2313,2289,1026,516,504]],"steps":[[0,0,0,50],[1,0,0,35],[0,0,0,35],[2,0,0,12],[0,0,0,25],[3,0,255,11],[3,0,0,11],[3,0,255,11],[3,0,0,11],[0,0,0,30]]},{"id":"heart","uid":1,"name":"Heart","group":"faces","frames":[[0,1806,3999,4095,4095,4095,2046,1020,504,240,96,0],[0,0,780,1950,2046,2046,1020,504,240,96,0,0]],"steps":[[1,0,0,11],[0,0,0,14],[1,0,0,11],[0,0,0,42],[1,0,0,11],[0,0,0,14],[1,0,0,11],[0,0,0,42],[1,0,0,11],[0,0,0,14],[1,0,0,11],[0,0,0,42],[130,0,0,0]]},{"id":"silly","uid":2,"name":"Silly face","group":"faces","frames":[[504,516,1026,2313,2709,2049,2049,3069,2193,1122,516,504],[504,516,1026,2313,2709,2049,2049,3069,2121,1074,516,504],[504,516,1026,2313,2709,2049,2049,3069,2337,1218,516,504]],"steps":[[1,0,0,11],[2,0,0,11],[1,0,0,11],[2,0,0,11],[1,0,0,11],[2,0,0,11],[1,0,0,11],[2,0,0,11],[0,0,0,20],[129,0,0,0]]},{"id":"circle","uid":3,"name":"Circle","group":"shapes","frames":[[240,1020,2046,2046,4095,4095,4095,4095,2046,2046,1020,240],[240,780,1026,1026,2049,2049,2049,2049,1026,1026,780,240],[192,768,1024,1024,0,0,0,0,0,0,0,0],[192,768,1024,1024,2048,2048,2048,2048,1024,0,0,0],[192,768,1024,1024,2048,2048,2048,2048,1024,1024,768,192],[192,768,1024,1024,2048,2048,2048,2048,1026,1026,780,240],[192,768,1024,1026,2049,2049,2049,2049,1026,1026,780,240],[240,780,1026,1026,2049,2049,2049,2049,1026,1026,780,240]],"steps":[[2,0,0,11],[3,0,0,11],[4,0,0,11],[5,0,0,11],[6,0,0,11],[7,0,0,11],[1,0,0,35],[0,0,0,25],[1,0,0,20],[0,0,0,35],[133,0,0,0]]},{"id":"square","uid":4,"name":"Square","group":"shapes","frames":[[0,2046,2046,2046,2046,2046,2046,2046,2046,2046,2046,0],[0,2046,1026,1026,1026,1026,1026,1026,1026,1026,2046,0],[0,1984,1024,0,0,0,0,0,0,0,0,0],[0,1984,1024,1024,1024,1024,1024,1024,1024,0,0,0],[0,1984,1024,1024,1024,1024,1024,1024,1024,1024,1984,0],[0,1984,1024,1024,1024,1024,1024,1024,1024,1026,2046,0],[0,1984,1024,1026,1026,1026,1026,1026,1026,1026,2046,0],[0,2046,1026,1026,1026,1026,1026,1026,1026,1026,2046,0]],"steps":[[2,0,0,11],[3,0,0,11],[4,0,0,11],[5,0,0,11],[6,0,0,11],[7,0,0,11],[1,0,0,35],[0,0,0,25],[1,0,0,20],[0,0,0,35],[135,0,0,0]]},{"id":"triangle","uid":5,"name":"Triangle","group":"shapes","frames":[[0,96,96,240,240,504,1020,1020,2046,2046,4095,0],[0,96,96,144,144,264,516,516,1026,1026,4095,0],[0,64,64,128,128,256,0,0,0,0,0,0],[0,64,64,128,128,256,512,512,1024,1024,2048,0],[0,64,64,128,128,256,512,512,1024,1024,4032,0],[0,64,64,128,128,256,512,512,1024,1024,4094,0],[0,64,64,128,128,256,516,516,1026,1026,4095,0],[0,96,96,144,144,264,516,516,1026,1026,4095,0]],"steps":[[2,0,0,11],[3,0,0,11],[4,0,0,11],[5,0,0,11],[6,0,0,11],[7,0,0,11],[1,0,0,35],[0,0,0,25],[1,0,0,20],[0,0,0,35],[128,0,0,0]]},{"id":"rectangle","uid":6,"name":"Rectangle","group":"shapes","frames":[[0,0,0,4095,4095,4095,4095,4095,4095,0,0,0],[0,0,0,4095,2049,2049,2049,2049,4095,0,0,0],[0,0,0,4032,0,0,0,0,0,0,0,0],[0,0,0,4032,2048,2048,2048,2048,2048,0,0,0],[0,0,0,4032,2048,2048,2048,2048,4032,0,0,0],[0,0,0,4032,2048,2048,2048,2048,4095,0,0,0],[0,0,0,4033,2049,2049,2049,2049,4095,0,0,0],[0,0,0,4095,2049,2049,2049,2049,4095,0,0,0]],"steps":[[2,0,0,11],[3,0,0,11],[4,0,0,11],[5,0,0,11],[6,0,0,11],[7,0,0,11],[1,0,0,35],[0,0,0,25],[1,0,0,20],[0,0,0,35],[132,0,0,0]]},{"id":"diamond","uid":7,"name":"Diamond","group":"shapes","frames":[[96,240,504,1020,2046,4095,4095,2046,1020,504,240,96],[96,144,264,516,1026,2049,2049,1026,516,264,144,96],[64,128,256,512,0,0,0,0,0,0,0,0],[64,128,256,512,1024,2048,2048,1024,0,0,0,0],[64,128,256,512,1024,2048,2048,1024,512,256,128,64],[64,128,256,512,1024,2048,2048,1024,516,264,144,96],[64,128,256,512,1026,2049,2049,1026,516,264,144,96],[96,144,264,516,1026,2049,2049,1026,516,264,144,96]],"steps":[[2,0,0,11],[3,0,0,11],[4,0,0,11],[5,0,0,11],[6,0,0,11],[7,0,0,11],[1,0,0,35],[0,0,0,25],[1,0,0,20],[0,0,0,35],[135,0,0,0]]},{"id":"oval","uid":8,"name":"Oval","group":"shapes","frames":[[0,0,504,2046,4095,4095,4095,4095,2046,504,0,0],[0,0,504,1542,2049,2049,2049,2049,1542,504,0,0],[0,0,448,1536,0,0,0,0,0,0,0,0],[0,0,448,1536,2048,2048,2048,2048,1024,0,0,0],[0,0,448,1536,2048,2048,2048,2048,1536,448,0,0],[0,0,448,1536,2048,2048,2048,2048,1542,504,0,0],[0,0,448,1538,2049,2049,2049,2049,1542,504,0,0],[0,0,504,1542,2049,2049,2049,2049,1542,504,0,0]],"steps":[[2,0,0,11],[3,0,0,11],[4,0,0,11],[5,0,0,11],[6,0,0,11],[7,0,0,11],[1,0,0,35],[0,0,0,25],[1,0,0,20],[0,0,0,35],[131,0,0,0]]},{"id":"pentagon","uid":9,"name":"Pentagon","group":"shapes","frames":[[96,240,504,2046,4095,4095,2046,2046,2046,1020,1020,1020],[96,144,264,1542,2049,2049,1026,1026,1026,516,516,1020],[64,128,256,1536,2048,0,0,0,0,0,0,0],[64,128,256,1536,2048,2048,1024,1024,1024,512,0,0],[64,128,256,1536,2048,2048,1024,1024,1024,512,512,960],[64,128,256,1536,2048,2048,1024,1024,1024,516,516,1020],[64,128,256,1536,2049,2049,1026,1026,1026,516,516,1020],[96,144,264,1542,2049,2049,1026,1026,1026,516,516,1020]],"steps":[[2,0,0,11],[3,0,0,11],[4,0,0,11],[5,0,0,11],[6,0,0,11],[7,0,0,11],[1,0,0,35],[0,0,0,25],[1,0,0,20],[0,0,0,35],[135,0,0,0]]},{"id":"hexagon","uid":10,"name":"Hexagon","group":"shapes","frames":[[96,504,2046,2046,2046,2046,2046,2046,2046,2046,504,96],[96,408,1542,1026,1026,1026,1026,1026,1026,1542,408,96],[64,384,1536,1024,0,0,0,0,0,0,0,0],[64,384,1536,1024,1024,1024,1024,1024,1024,0,0,0],[64,384,1536,1024,1024,1024,1024,1024,1024,1536,384,64],[64,384,1536,1024,1024,1024,1024,1024,1026,1542,408,96],[64,384,1536,1026,1026,1026,1026,1026,1026,1542,408,96],[96,408,1542,1026,1026,1026,1026,1026,1026,1542,408,96]],"steps":[[2,0,0,11],[3,0,0,11],[4,0,0,11],[5,0,0,11],[6,0,0,11],[7,0,0,11],[1,0,0,35],[0,0,0,25],[1,0,0,20],[0,0,0,35],[135,0,0,0]]},{"id":"plus","uid":11,"name":"Plus","group":"shapes","frames":[[0,240,240,240,2046,2046,2046,2046,240,240,240,0],[0,240,144,144,1806,1026,1026,1806,144,144,240,0],[0,192,128,128,768,0,0,0,0,0,0,0],[0,192,128,128,1792,1024,1024,1536,0,0,0,0],[0,192,128,128,1792,1024,1024,1792,128,128,192,0],[0,192,128,128,1792,1024,1024,1804,144,144,240,0],[0,192,128,128,1798,1026,1026,1806,144,144,240,0],[0,240,144,144,1806,1026,1026,1806,144,144,240,0]],"steps":[[2,0,0,11],[3,0,0,11],[4,0,0,11],[5,0,0,11],[6,0,0,11],[7,0,0,11],[1,0,0,35],[0,0,0,25],[1,0,0,20],[0,0,0,35],[129,0,0,0]]},{"id":"sun","uid":12,"name":"Sun","group":"sky","frames":[[96,96,0,240,504,3579,3579,504,240,0,96,96],[1026,516,0,240,504,504,504,504,240,0,516,1026],[1122,612,0,240,504,3579,3579,504,240,0,612,1122]],"steps":[[0,0,0,22],[1,0,0,22],[0,0,0,22],[1,0,0,22],[0,0,0,22],[1,0,0,22],[2,0,0,50],[133,0,0,0]]},{"id":"moon","uid":13,"name":"Moon","group":"sky","frames":[[120,30,270,911,271,15,15,79,15,1038,30,120],[120,30,14,271,15,15,79,239,79,1038,30,120],[120,30,14,271,15,15,15,79,1039,3598,1054,120]],"steps":[[0,0,0,26],[1,0,0,26],[2,0,0,26],[0,0,0,26],[1,0,0,26],[2,0,0,26],[0,0,0,26],[1,0,0,26],[2,0,0,26],[0,0,0,30]]},{"id":"star","uid":14,"name":"Star","group":"sky","frames":[[96,96,240,4095,2046,1020,504,504,924,780,1542,1026]],"steps":[[0,0,0,25],[32,0,0,12],[0,0,0,16],[32,0,0,12],[0,0,0,25],[135,0,0,0],[130,0,0,0]]},{"id":"cloud","uid":15,"name":"Rain cloud","group":"sky","frames":[[0,240,1008,4094,4094,4094,2046,0,0,0,0,0],[0,240,1008,4094,4094,4094,2046,0,1092,0,272,0],[0,240,1008,4094,4094,4094,2046,0,0,1092,0,272],[0,240,1008,4094,4094,4094,2046,0,272,0,1092,0],[0,240,1008,4094,4094,4094,2046,0,0,272,0,1092]],"steps":[[1,0,0,11],[2,0,0,11],[3,0,0,11],[4,0,0,11],[1,0,0,11],[2,0,0,11],[3,0,0,11],[4,0,0,11],[1,0,0,11],[2,0,0,11],[3,0,0,11],[4,0,0,11],[1,0,0,11],[2,0,0,11],[3,0,0,11],[4,0,0,11],[0,0,0,30]]},{"id":"rainbow","uid":16,"name":"Rainbow","group":"sky","frames":[[0,240,1020,1806,1542,3315,3579,3483,3339,3339,0,0],[0,240,1020,1806,1542,3075,3075,3075,3075,3075,0,0]],"steps":[[1,0,0,26],[0,0,0,40],[32,0,0,20],[0,0,0,20],[32,0,0,20],[0,0,0,20],[130,0,0,0]]},{"id":"flower","uid":17,"name":"Flower","group":"sky","frames":[[612,876,1020,1020,504,240,96,1638,876,504,96,96],[0,0,0,0,0,0,0,0,360,240,96,96],[0,0,0,96,240,240,96,612,876,504,96,96]],"steps":[[1,0,0,35],[2,0,0,35],[0,0,0,30],[0,255,0,15],[0,1,0,15],[0,255,0,15],[0,1,0,15],[0,0,0,20],[130,0,0,0]]},{"id":"snowman","uid":18,"name":"Snowman","group":"sky","frames":[[240,504,240,360,504,240,504,924,1020,924,1020,504],[240,504,240,360,504,2289,1530,924,1020,924,1020,504],[240,504,240,360,504,240,504,2973,1022,924,1020,504]],"steps":[[1,0,0,22],[2,0,0,22],[1,0,0,22],[2,0,0,22],[1,0,0,22],[2,0,0,22],[0,0,0,20],[128,0,0,0]]},{"id":"tree","uid":19,"name":"Tree","group":"sky","frames":[[240,1020,2014,4095,4063,2046,1004,240,96,96,240,504]],"steps":[[0,0,0,30],[129,0,0,0],[0,0,0,20],[129,0,0,0]]},{"id":"cat","uid":20,"name":"Cat","group":"animals","frames":[[1026,1542,1530,1026,1434,1434,1026,3171,1386,3219,516,504],[1026,1542,1530,1026,1026,1434,1026,3171,1386,3219,516,504],[2,1030,3578,1026,1434,1434,1026,3171,1386,3219,516,504],[1026,1542,1530,1026,1434,1434,1026,3171,1122,3219,612,504]],"steps":[[0,0,0,45],[2,0,0,16],[0,0,0,20],[2,0,0,16],[0,0,0,40],[1,0,0,14],[0,0,0,30],[3,0,0,30],[0,0,0,25],[3,0,0,30],[0,0,0,30]]},{"id":"dog","uid":21,"name":"Dog","group":"animals","frames":[[0,1792,3968,3457,3970,254,254,254,198,198,0,0],[0,1792,3968,3456,3971,254,254,254,198,198,0,0],[0,1792,3968,3457,3970,254,254,254,198,396,0,0]],"steps":[[1,0,0,12],[0,0,0,12],[1,0,0,12],[0,0,0,12],[1,0,0,12],[0,0,0,12],[1,0,0,12],[0,0,0,12],[1,0,0,12],[0,0,0,12],[2,0,0,14],[0,255,0,14],[2,254,0,14],[2,254,0,14],[0,255,0,14],[2,0,0,14],[1,0,0,10],[0,0,0,10],[1,0,0,10],[0,0,0,10],[1,0,0,10],[0,0,0,10]]},{"id":"bunny","uid":22,"name":"Bunny","group":"animals","frames":[[780,1170,1170,1170,780,1020,1026,2313,2145,2193,1026,1020],[12,1810,2194,1810,780,1020,1026,2313,2145,2193,1026,1020]],"steps":[[0,0,0,30],[1,0,0,30],[0,0,0,25],[0,0,0,7],[0,0,255,7],[0,0,254,7],[0,0,253,7],[0,0,254,7],[0,0,255,7],[0,0,0,7],[0,0,0,12],[0,0,0,7],[0,0,255,7],[0,0,254,7],[0,0,253,7],[0,0,254,7],[0,0,255,7],[0,0,0,7],[0,0,0,25]]},{"id":"pig","uid":23,"name":"Pig","group":"animals","frames":[[1542,1806,1020,1026,2313,2049,2289,2409,2289,1026,1020,0],[1542,1806,1020,1026,2313,2049,2049,2289,2409,1266,1020,0],[1542,1806,1020,1026,2049,2049,2289,2409,2289,1026,1020,0]],"steps":[[1,0,0,14],[0,0,0,14],[1,0,0,14],[0,0,0,14],[1,0,0,14],[0,0,0,14],[0,0,0,30],[2,0,0,13],[0,0,0,30],[128,0,0,0]]},{"id":"fish","uid":24,"name":"Fish","group":"animals","frames":[[0,0,0,480,1017,1787,2047,2043,1017,480,0,0],[0,0,0,480,1016,1785,2047,2041,1016,480,0,0]],"steps":[[0,0,0,7],[1,1,0,7],[0,2,0,7],[1,3,0,7],[0,4,0,7],[1,5,0,7],[0,6,0,7],[1,7,0,7],[0,8,0,7],[1,9,0,7],[0,10,0,7],[1,11,0,7],[0,12,0,7],[0,244,0,7],[1,245,0,7],[0,246,0,7],[1,247,0,7],[0,248,0,7],[1,249,0,7],[0,250,0,7],[1,251,0,7],[0,252,0,7],[1,253,0,7],[0,254,0,7],[1,255,0,7],[0,0,0,7],[0,0,0,20],[64,0,0,7],[65,255,0,7],[64,254,0,7],[65,253,0,7],[64,252,0,7],[65,251,0,7],[64,250,0,7],[65,249,0,7],[64,248,0,7],[65,247,0,7],[64,246,0,7],[65,245,0,7],[64,244,0,7],[64,12,0,7],[65,11,0,7],[64,10,0,7],[65,9,0,7],[64,8,0,7],[65,7,0,7],[64,6,0,7],[65,5,0,7],[64,4,0,7],[65,3,0,7],[64,2,0,7],[65,1,0,7],[64,0,0,7],[64,0,0,30],[0,0,0,20]]},{"id":"bird","uid":25,"name":"Bird","group":"animals","frames":[[0,0,480,1008,752,4081,1019,999,966,1020,144,216],[0,0,480,1008,752,4085,1015,1022,1022,1020,144,216],[0,0,480,1008,752,1009,1019,999,966,1020,144,216]],"steps":[[1,0,255,11],[0,0,0,11],[1,0,255,11],[0,0,0,11],[1,0,255,11],[0,0,0,11],[1,0,255,11],[0,0,0,11],[2,0,0,16],[0,0,0,16],[2,0,0,16],[0,0,0,20],[128,0,0,0]]},{"id":"duck","uid":26,"name":"Duck","group":"animals","frames":[[0,448,992,864,4064,993,1011,2047,2047,1022,508,0],[0,448,992,864,2016,4065,1011,2047,2047,1022,508,0]],"steps":[[1,0,0,16],[0,0,0,16],[1,0,0,16],[0,0,0,30],[0,0,255,16],[0,0,0,16],[0,0,255,16],[0,0,0,16],[0,0,255,16],[0,0,0,16],[131,0,0,0]]},{"id":"frog","uid":27,"name":"Frog","group":"animals","frames":[[1806,2709,2193,2046,4095,3069,3075,2046,1020,1542,3075,0],[0,1806,3999,2046,4095,3069,3075,2046,1020,1542,3075,0],[1806,2709,2193,2046,4095,3069,2049,3075,2046,1542,3075,0]],"steps":[[0,0,0,40],[1,0,0,14],[0,0,0,30],[2,0,0,20],[0,0,0,20],[2,0,0,20],[0,0,0,25],[0,0,0,6],[0,0,255,6],[0,0,254,6],[0,0,253,6],[0,0,254,6],[0,0,255,6],[0,0,0,6],[0,0,0,16],[0,0,0,6],[0,0,255,6],[0,0,254,6],[0,0,253,6],[0,0,254,6],[0,0,255,6],[0,0,0,6],[0,0,0,25]]},{"id":"turtle","uid":28,"name":"Turtle","group":"animals","frames":[[0,0,0,248,340,3070,2046,2047,292,876,0,0],[0,0,0,248,340,1022,1022,2047,292,876,0,0]],"steps":[[0,0,0,30],[1,0,0,60],[0,0,0,30],[1,0,0,30],[0,0,0,20],[0,0,0,26],[0,1,0,26],[0,2,0,26],[0,3,0,26],[0,3,0,12],[0,2,0,12],[0,1,0,12],[0,0,0,12]]},{"id":"snail","uid":29,"name":"Snail","group":"animals","frames":[[0,2560,2560,3704,3716,3378,3402,3434,3218,4095,0,0],[0,1024,2560,3704,3716,3378,3402,3434,3218,4095,0,0]],"steps":[[1,0,0,20],[0,0,0,20],[1,0,0,20],[0,0,0,20],[1,0,0,20],[0,0,0,20],[0,0,0,40],[0,1,0,40],[0,2,0,40],[0,2,0,30],[0,1,0,30],[0,0,0,30]]},{"id":"butterfly","uid":30,"name":"Butterfly","group":"animals","frames":[[264,144,1902,3951,3951,1902,876,1902,1902,612,0,0],[264,144,876,876,876,876,360,876,876,360,0,0]],"steps":[[1,0,255,11],[0,0,0,13],[1,0,255,11],[0,0,0,13],[1,0,255,11],[0,0,0,13],[1,0,255,11],[0,0,0,13],[1,0,255,11],[0,0,0,13],[0,0,0,20],[131,0,0,0]]},{"id":"bee","uid":31,"name":"Bee","group":"animals","frames":[[216,292,292,216,504,852,1878,3414,852,504,0,0],[0,774,1161,854,504,852,1878,3414,852,504,0,0]],"steps":[[0,0,0,8],[1,255,0,8],[0,254,255,8],[0,254,255,8],[1,255,0,8],[0,0,0,8],[1,1,1,8],[0,2,1,8],[0,2,1,8],[1,1,1,8],[0,0,0,8],[1,0,0,7],[0,0,0,7],[1,0,0,7],[0,0,0,7],[1,0,0,7],[0,0,0,7],[1,0,0,7],[0,0,0,7],[128,0,0,0]]},{"id":"owl","uid":32,"name":"Owl","group":"animals","frames":[[1026,1542,2046,3171,3435,3171,1950,1982,2046,1782,1020,660],[1026,1542,2046,4095,3171,4095,1950,1982,2046,1782,1020,660],[1026,1542,2046,3171,3303,3171,1950,1982,2046,1782,1020,660]],"steps":[[0,0,0,40],[1,0,0,14],[0,0,0,30],[2,0,0,45],[0,0,0,20],[66,0,0,45],[0,0,0,30],[1,0,0,14],[0,0,0,20],[0,255,0,16],[0,1,0,16],[0,255,0,16],[0,1,0,16],[0,0,0,20]]},{"id":"dino","uid":33,"name":"Dinosaur","group":"animals","frames":[[1536,2560,3584,1536,768,504,1022,1023,505,1320,1320,0],[0,3072,1536,3584,768,504,1022,1023,505,1320,1320,0],[1536,2560,3584,1536,768,504,1022,1023,505,2640,1320,0]],"steps":[[1,0,0,22],[0,0,0,22],[1,0,0,22],[0,0,0,22],[1,0,0,22],[0,0,0,22],[2,0,0,15],[0,255,0,15],[2,254,0,15],[0,253,0,15],[2,253,0,15],[0,254,0,15],[2,255,0,15],[0,0,0,15],[0,0,0,20]]},{"id":"zebra","uid":34,"name":"Zebra","group":"animals","frames":[[1024,3584,2560,3840,510,427,427,426,510,390,390,258],[1024,3584,2560,3840,510,427,427,426,510,204,390,258],[1024,3584,2560,3840,511,426,427,426,510,390,390,258]],"steps":[[2,0,0,14],[0,0,0,14],[2,0,0,14],[0,0,0,14],[2,0,0,14],[0,0,0,14],[1,0,0,6],[0,1,0,6],[1,2,0,6],[0,3,0,6],[1,4,0,6],[0,5,0,6],[1,6,0,6],[0,7,0,6],[1,8,0,6],[0,9,0,6],[1,10,0,6],[0,11,0,6],[1,12,0,6],[1,244,0,6],[0,245,0,6],[1,246,0,6],[0,247,0,6],[1,248,0,6],[0,249,0,6],[1,250,0,6],[0,251,0,6],[1,252,0,6],[0,253,0,6],[1,254,0,6],[0,255,0,6],[1,0,0,6],[0,0,0,30]]},{"id":"lion","uid":35,"name":"Lion","group":"animals","frames":[[1530,4095,3591,2457,3075,2145,3219,2049,3075,2046,1530,0],[1530,4095,3591,2049,3483,2145,3315,2193,3315,2046,1530,0]],"steps":[[0,0,0,40],[1,255,0,11],[1,1,0,11],[1,255,0,11],[1,1,0,11],[1,255,0,11],[1,1,0,11],[1,0,0,20],[0,0,0,30],[133,0,0,0]]},{"id":"tiger","uid":36,"name":"Tiger","group":"animals","frames":[[1542,1902,1686,4095,3315,4095,1434,3855,1902,780,504,0],[1542,1902,1686,4095,4095,4095,1434,3855,1902,780,504,0],[1542,1902,1686,4095,3315,4095,1434,3951,1782,876,504,0]],"steps":[[0,0,0,40],[1,0,0,13],[0,0,0,30],[2,0,0,25],[0,0,0,15],[2,0,0,25],[0,0,0,25],[128,0,0,0]]},{"id":"monkey","uid":37,"name":"Monkey","group":"animals","frames":[[240,780,516,1170,3075,2805,3339,1386,660,264,240,0],[240,780,516,1170,3075,2805,3339,1290,612,264,240,0],[240,780,516,1026,3075,2805,3339,1386,660,264,240,0]],"steps":[[0,0,0,30],[1,0,0,15],[0,0,0,15],[1,0,0,15],[0,0,0,15],[1,0,0,15],[0,0,0,15],[2,0,0,13],[0,0,0,20],[0,0,0,6],[0,0,255,6],[0,0,254,6],[0,0,253,6],[0,0,254,6],[0,0,255,6],[0,0,0,6],[0,0,0,10],[0,0,0,6],[0,0,255,6],[0,0,254,6],[0,0,253,6],[0,0,254,6],[0,0,255,6],[0,0,0,6],[129,0,0,0]]},{"id":"elephant","uid":38,"name":"Elephant","group":"animals","frames":[[0,1008,4092,4094,4090,4078,4070,4066,1634,1635,0,0],[1,1010,4094,4094,4090,4078,4070,4064,1632,1632,0,0],[0,1008,4092,4094,4090,4078,4070,4066,866,867,0,0]],"steps":[[0,0,0,40],[1,0,0,70],[0,0,0,30],[2,255,0,16],[0,0,0,16],[2,255,0,16],[0,0,0,16],[2,255,0,16],[0,0,0,16],[1,0,0,50],[0,0,0,30]]},{"id":"giraffe","uid":39,"name":"Giraffe","group":"animals","frames":[[2560,3584,3840,768,384,192,126,90,126,330,330,330]],"steps":[[0,0,0,30],[129,0,0,0],[0,0,0,20],[0,0,1,20],[0,0,0,20],[0,0,1,20],[0,0,0,20],[129,0,0,0]]},{"id":"unicorn","uid":40,"name":"Unicorn","group":"animals","frames":[[2048,1024,1792,3456,3968,415,1023,1022,1022,774,774,514],[2048,1024,1792,3456,3968,415,1023,1022,1022,396,774,514]],"steps":[[1,0,0,6],[0,1,0,6],[1,2,0,6],[0,3,0,6],[1,4,0,6],[0,5,0,6],[1,6,0,6],[0,7,0,6],[1,8,0,6],[0,9,0,6],[1,10,0,6],[0,11,0,6],[1,12,0,6],[1,244,0,6],[0,245,0,6],[1,246,0,6],[0,247,0,6],[1,248,0,6],[0,249,0,6],[1,250,0,6],[0,251,0,6],[1,252,0,6],[0,253,0,6],[1,254,0,6],[0,255,0,6],[1,0,0,6],[0,0,0,20],[130,0,0,0]]},{"id":"snake","uid":41,"name":"Snake","group":"animals","frames":[[0,0,1792,3456,3968,2816,390,207,121,32,0,0],[0,0,1792,3456,3968,768,390,207,121,32,0,0],[0,0,1792,3456,3968,2816,2435,198,124,0,0,0]],"steps":[[1,0,0,14],[0,0,0,14],[1,0,0,14],[0,0,0,14],[1,0,0,14],[0,0,0,14],[2,0,0,18],[0,0,0,18],[2,0,0,18],[0,0,0,18],[2,0,0,18],[0,0,0,18],[131,0,0,0]]},{"id":"penguin","uid":42,"name":"Penguin","group":"animals","frames":[[240,504,780,660,612,1542,3339,2313,264,264,240,408],[240,504,780,660,612,1542,3339,2313,264,264,240,432],[240,504,780,660,612,3591,264,264,264,264,240,408]],"steps":[[0,255,0,18],[1,1,0,18],[0,255,0,18],[1,1,0,18],[0,255,0,18],[1,1,0,18],[0,255,0,18],[1,1,0,18],[2,0,0,12],[0,0,0,12],[2,0,0,12],[0,0,0,12],[2,0,0,12],[0,0,0,12],[128,0,0,0]]},{"id":"sheep","uid":43,"name":"Sheep","group":"animals","frames":[[0,0,438,1023,3583,3071,1023,510,660,660,0,0],[0,0,438,1023,1535,3071,3071,510,660,660,0,0]],"steps":[[0,0,0,30],[1,0,0,40],[0,0,0,20],[0,0,0,7],[0,0,255,7],[0,0,254,7],[0,0,255,7],[0,0,0,7],[0,0,0,15],[0,0,0,7],[0,0,255,7],[0,0,254,7],[0,0,255,7],[0,0,0,7],[129,0,0,0]]},{"id":"octopus","uid":44,"name":"Octopus","group":"animals","frames":[[504,1020,2046,1902,2046,2046,1020,1386,2709,2709,1290,0],[504,1020,2046,1902,2046,2046,1020,660,1386,1290,2565,0]],"steps":[[1,0,255,17],[0,0,0,17],[1,0,255,17],[0,0,0,17],[1,0,255,17],[0,0,0,17],[1,0,255,17],[0,0,0,17],[131,0,0,0]]},{"id":"whale","uid":45,"name":"Whale","group":"animals","frames":[[40,16,16,252,2558,3067,2047,2047,1022,508,0,0],[0,0,0,252,2558,3067,2047,2047,1022,508,0,0],[0,0,16,252,2558,3067,2047,2047,1022,508,0,0]],"steps":[[1,0,0,30],[2,0,0,14],[0,0,0,50],[2,0,0,14],[1,0,0,20],[1,0,0,6],[1,255,0,6],[1,254,0,6],[1,253,0,6],[1,252,0,6],[1,251,0,6],[1,250,0,6],[1,249,0,6],[1,248,0,6],[1,247,0,6],[1,246,0,6],[1,245,0,6],[1,244,0,6],[1,12,0,6],[1,11,0,6],[1,10,0,6],[1,9,0,6],[1,8,0,6],[1,7,0,6],[1,6,0,6],[1,5,0,6],[1,4,0,6],[1,3,0,6],[1,2,0,6],[1,1,0,6],[1,0,0,6],[2,0,0,14],[0,0,0,40]]},{"id":"ladybug","uid":46,"name":"Ladybug","group":"animals","frames":[[264,144,240,876,1434,1950,1686,1950,1434,924,144,0],[264,144,240,1638,2829,3855,3339,3855,2829,1806,144,0]],"steps":[[0,0,0,30],[1,0,0,30],[0,0,0,30],[1,0,0,20],[1,0,0,5],[1,0,255,5],[1,0,254,5],[1,0,253,5],[1,0,252,5],[1,0,251,5],[1,0,250,5],[1,0,249,5],[1,0,248,5],[1,0,247,5],[1,0,246,5],[1,0,245,5],[1,0,244,5],[1,0,12,5],[1,0,11,5],[1,0,10,5],[1,0,9,5],[1,0,8,5],[1,0,7,5],[1,0,6,5],[1,0,5,5],[1,0,4,5],[1,0,3,5],[1,0,2,5],[1,0,1,5],[1,0,0,5],[0,0,0,30]]},{"id":"ball","uid":47,"name":"Ball","group":"toys","frames":[[0,0,0,0,240,504,1004,1012,1020,1020,504,240],[0,0,0,0,0,0,0,504,2038,2042,2046,1020]],"steps":[[0,0,0,5],[0,0,255,5],[0,0,254,5],[0,0,253,5],[0,0,252,5],[0,0,253,5],[0,0,254,5],[0,0,255,5],[0,0,0,5],[1,0,0,9],[0,0,0,6],[0,0,0,5],[0,0,255,5],[0,0,254,5],[0,0,253,5],[0,0,252,5],[0,0,253,5],[0,0,254,5],[0,0,255,5],[0,0,0,5],[1,0,0,9],[0,0,0,6],[0,0,0,5],[0,0,255,5],[0,0,254,5],[0,0,253,5],[0,0,252,5],[0,0,253,5],[0,0,254,5],[0,0,255,5],[0,0,0,5],[1,0,0,9],[0,0,0,6],[0,0,0,30]]},{"id":"car","uid":48,"name":"Car","group":"toys","frames":[[0,0,0,504,612,1122,4095,2047,4095,780,780,0],[0,0,0,504,612,1122,4095,2047,4095,660,264,0]],"steps":[[0,0,0,6],[1,1,0,6],[0,2,0,6],[1,3,0,6],[0,4,0,6],[1,5,0,6],[0,6,0,6],[1,7,0,6],[0,8,0,6],[1,9,0,6],[0,10,0,6],[1,11,0,6],[0,12,0,6],[0,244,0,6],[1,245,0,6],[0,246,0,6],[1,247,0,6],[0,248,0,6],[1,249,0,6],[0,250,0,6],[1,251,0,6],[0,252,0,6],[1,253,0,6],[0,254,0,6],[1,255,0,6],[0,0,0,6],[0,0,255,10],[0,0,0,40]]},{"id":"train","uid":49,"name":"Train","group":"toys","frames":[[12,972,588,588,1022,2046,2046,2046,4095,1638,1638,0],[6,972,588,588,1022,2046,2046,2046,4095,1638,1638,0],[24,972,588,588,1022,2046,2046,2046,4095,1638,1638,0]],"steps":[[1,0,0,16],[2,0,0,16],[1,0,0,16],[2,0,0,16],[1,0,0,16],[2,0,0,16],[1,0,0,6],[2,1,0,6],[1,2,0,6],[2,3,0,6],[1,4,0,6],[2,5,0,6],[1,6,0,6],[2,7,0,6],[1,8,0,6],[2,9,0,6],[1,10,0,6],[2,11,0,6],[1,12,0,6],[1,244,0,6],[2,245,0,6],[1,246,0,6],[2,247,0,6],[1,248,0,6],[2,249,0,6],[1,250,0,6],[2,251,0,6],[1,252,0,6],[2,253,0,6],[1,254,0,6],[2,255,0,6],[1,0,0,6],[0,0,0,30]]},{"id":"plane","uid":50,"name":"Airplane","group":"toys","frames":[[64,192,192,449,451,2047,4095,451,449,192,192,64]],"steps":[[0,0,0,5],[0,1,0,5],[0,2,255,5],[0,3,255,5],[0,4,255,5],[0,5,254,5],[0,6,254,5],[0,7,254,5],[0,8,253,5],[0,9,253,5],[0,10,253,5],[0,11,252,5],[0,12,252,5],[0,244,4,5],[0,245,4,5],[0,246,3,5],[0,247,3,5],[0,248,3,5],[0,249,2,5],[0,250,2,5],[0,251,2,5],[0,252,1,5],[0,253,1,5],[0,254,1,5],[0,255,0,5],[0,0,0,5],[0,0,255,15],[0,0,0,30]]},{"id":"rocket","uid":51,"name":"Rocket","group":"toys","frames":[[96,240,240,408,408,504,504,1020,1782,1266,96,144],[96,240,240,408,408,504,504,1020,1782,1266,240,96]],"steps":[[1,0,0,9],[0,0,0,9],[1,0,0,9],[0,0,0,9],[1,0,0,9],[0,0,0,9],[1,0,0,9],[0,0,0,9],[1,0,0,5],[0,0,255,5],[1,0,254,5],[0,0,253,5],[1,0,252,5],[0,0,251,5],[1,0,250,5],[0,0,249,5],[1,0,248,5],[0,0,247,5],[1,0,246,5],[0,0,245,5],[1,0,244,5],[1,0,12,6],[0,0,11,6],[1,0,10,6],[0,0,9,6],[1,0,8,6],[0,0,7,6],[1,0,6,6],[0,0,5,6],[1,0,4,6],[0,0,3,6],[1,0,2,6],[0,0,1,6],[1,0,0,6],[0,0,0,30]]},{"id":"boat","uid":52,"name":"Boat","group":"toys","frames":[[32,96,224,480,992,32,4095,2046,1020,0,1638,2457],[32,96,224,480,992,32,4095,2046,1020,0,819,3276]],"steps":[[1,0,255,22],[0,0,0,22],[1,0,255,22],[0,0,0,22],[1,0,255,22],[0,0,0,22],[1,0,255,22],[0,0,0,22],[0,255,0,20],[0,1,0,20],[0,255,0,20],[0,1,0,20],[0,0,0,20]]},{"id":"balloon","uid":53,"name":"Balloon","group":"toys","frames":[[240,504,1020,1004,1004,1020,504,240,96,32,64,32],[240,504,1020,1004,1004,1020,504,240,96,64,32,64]],"steps":[[1,0,0,20],[0,0,0,20],[1,0,0,20],[0,0,0,20],[1,0,0,7],[0,0,255,7],[1,0,254,7],[0,0,253,7],[1,0,252,7],[0,0,251,7],[1,0,250,7],[0,0,249,7],[1,0,248,7],[0,0,247,7],[1,0,246,7],[0,0,245,7],[1,0,244,7],[1,0,12,7],[0,0,11,7],[1,0,10,7],[0,0,9,7],[1,0,8,7],[0,0,7,7],[1,0,6,7],[0,0,5,7],[1,0,4,7],[0,0,3,7],[1,0,2,7],[0,0,1,7],[1,0,0,7],[0,0,0,30]]},{"id":"robot","uid":54,"name":"Robot","group":"toys","frames":[[96,32,1020,516,692,516,756,1020,3069,3579,408,408],[96,32,1020,516,1460,516,756,1020,3069,3579,408,408],[96,32,1020,516,692,516,756,3069,3071,252,408,408]],"steps":[[0,0,0,30],[1,0,0,20],[0,0,0,20],[2,0,0,18],[0,0,0,18],[2,0,0,18],[0,0,0,18],[2,0,0,18],[0,0,0,18],[129,0,0,0]]},{"id":"house","uid":55,"name":"House","group":"toys","frames":[[1632,1776,504,1020,2046,4095,1542,1718,1590,1718,1590,4095],[1632,1776,504,1020,2046,4095,1542,1718,1718,1718,1590,4095],[96,1264,504,1020,2046,4095,1542,1718,1590,1718,1590,4095]],"steps":[[0,0,0,30],[2,0,0,20],[0,0,0,20],[2,0,0,20],[0,0,0,20],[2,0,0,20],[0,0,0,20],[1,0,0,50],[0,0,0,30]]},{"id":"teddy","uid":56,"name":"Teddy bear","group":"toys","frames":[[1542,3855,4095,1782,1950,2046,1020,3579,2553,504,924,924],[1542,3855,4095,1782,1950,2046,3068,3067,505,504,924,924]],"steps":[[0,0,0,30],[1,0,0,20],[0,0,0,20],[1,0,0,20],[0,0,0,20],[1,0,0,20],[0,0,0,20],[133,0,0,0],[128,0,0,0]]},{"id":"book","uid":57,"name":"Book","group":"toys","frames":[[0,0,1542,2457,2145,2925,2145,2925,2145,3687,504,0],[0,0,1542,2457,2145,2145,2145,2145,2145,3687,504,0],[0,0,1542,2457,2145,2157,2145,2145,2145,3687,504,0],[0,0,1542,2457,2145,2925,2145,2145,2145,3687,504,0],[0,0,1542,2457,2145,2925,2145,2157,2145,3687,504,0]],"steps":[[1,0,0,30],[2,0,0,25],[3,0,0,25],[4,0,0,25],[0,0,0,40],[132,0,0,0],[0,0,0,20],[130,0,0,0]]},{"id":"crown","uid":58,"name":"Crown","group":"toys","frames":[[0,2145,2145,3315,3831,4095,2925,4095,4095,0,0,0],[0,2145,2145,3315,3831,4095,4095,4095,4095,0,0,0]],"steps":[[1,0,0,15],[0,0,0,15],[1,0,0,15],[0,0,0,15],[1,0,0,15],[0,0,0,15],[130,0,0,0],[0,0,0,7],[0,0,255,7],[0,0,254,7],[0,0,255,7],[0,0,0,7]]},{"id":"castle","uid":59,"name":"Castle","group":"toys","frames":[[1542,1026,1026,2565,3591,3927,4095,3831,4095,3999,3999,3999],[3075,1026,1026,2565,3591,3927,4095,3831,4095,3999,3999,3999],[1542,1026,1026,2565,3591,3927,4095,4095,4095,3999,3999,3999]],"steps":[[1,0,0,20],[0,0,0,20],[1,0,0,20],[0,0,0,20],[1,0,0,20],[0,0,0,20],[1,0,0,20],[0,0,0,20],[2,0,0,50],[0,0,0,20],[2,0,0,50],[0,0,0,30]]},{"id":"kite","uid":60,"name":"Kite","group":"toys","frames":[[64,224,336,584,508,584,336,224,64,32,48,8],[64,224,336,584,508,584,336,224,64,64,96,64]],"steps":[[1,1,255,20],[0,0,0,20],[1,255,0,20],[0,0,1,20],[1,1,255,20],[0,0,0,20],[1,255,0,20],[0,0,1,20],[1,1,255,20],[0,0,0,20],[1,255,0,20],[0,0,1,20],[0,0,0,30]]},{"id":"truck","uid":61,"name":"Truck","group":"toys","frames":[[0,0,0,127,833,1345,3905,4095,4095,390,390,0],[0,0,0,127,833,1345,3905,4095,4095,650,260,0]],"steps":[[0,0,255,12],[0,0,0,20],[1,0,0,5],[0,1,0,5],[1,2,0,5],[0,3,0,5],[1,4,0,5],[0,5,0,5],[1,6,0,5],[0,7,0,5],[1,8,0,5],[0,9,0,5],[1,10,0,5],[0,11,0,5],[1,12,0,5],[1,244,0,5],[0,245,0,5],[1,246,0,5],[0,247,0,5],[1,248,0,5],[0,249,0,5],[1,250,0,5],[0,251,0,5],[1,252,0,5],[0,253,0,5],[1,254,0,5],[0,255,0,5],[1,0,0,5],[0,0,255,12],[0,0,0,30]]},{"id":"apple","uid":62,"name":"Apple","group":"food","frames":[[64,416,96,876,2046,4095,4095,4095,4095,2046,1020,408],[64,416,96,876,2046,1023,511,1023,4095,2046,1020,408],[64,416,96,876,510,511,255,511,1023,2046,1020,408]],"steps":[[0,0,0,30],[1,0,0,40],[2,0,0,50],[0,0,0,30],[135,0,0,0]]},{"id":"icecream","uid":63,"name":"Ice cream","group":"food","frames":[[96,240,1020,2046,2046,1754,2046,1364,1708,680,336,224]],"steps":[[0,0,0,30],[0,255,0,16],[0,1,0,16],[0,255,0,16],[0,1,0,16],[0,0,0,20],[133,0,0,0]]},{"id":"cake","uid":64,"name":"Cake","group":"food","frames":[[584,584,0,584,584,2046,2730,2046,4095,2633,4095,4095],[292,584,0,584,584,2046,2730,2046,4095,2633,4095,4095],[1168,584,0,584,584,2046,2730,2046,4095,2633,4095,4095]],"steps":[[1,0,0,15],[2,0,0,15],[1,0,0,15],[2,0,0,15],[1,0,0,15],[2,0,0,15],[1,0,0,15],[2,0,0,15],[0,0,0,30],[130,0,0,0]]},{"id":"lollipop","uid":65,"name":"Lollipop","group":"food","frames":[[504,516,1266,1290,1386,1354,1330,1284,504,32,32,32]],"steps":[[0,0,0,30],[135,0,0,0],[0,0,0,20],[130,0,0,0]]},{"id":"gift","uid":66,"name":"Present","group":"toys","frames":[[408,612,612,504,4095,4095,96,1950,1950,1950,1950,2046],[780,1170,780,504,0,4095,96,1950,1950,1950,1950,2046]],"steps":[[0,0,0,30],[0,255,0,10],[0,1,0,10],[0,255,0,10],[0,1,0,10],[1,0,0,50],[130,0,0,0]]},{"id":"note","uid":67,"name":"Music","group":"toys","frames":[[4080,4080,2064,2064,2064,2064,2064,3612,3870,3870,1548,0]],"steps":[[0,0,255,15],[0,1,0,15],[0,0,255,15],[0,255,0,15],[0,0,255,15],[0,1,0,15],[0,0,255,15],[0,255,0,15],[0,0,255,15],[0,1,0,15],[0,0,255,15],[0,255,0,15],[0,0,255,15],[0,1,0,15],[0,0,255,15],[0,255,0,15],[0,0,0,20],[131,0,0,0]]}];
+/*LIB_END*/
+/*FW_BEGIN*/
+const FIRMWARE = { name: "KeyChainino Pictures", file: "KeyChainino_v144_pictures.ino.hex", built: "2026-10-17", bytes: 17928,
+  b64: "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/gf+B/8PAAAAAGAAYACQAJAACAEEAgQCAgQCBP8PAAAAAEAAQACAAIAAAAEAAAAAAAAAAAAAAAAAAEAAQACAAIAAAAEAAgACAAQABAAIAAAAAEAAQACAAIAAAAEAAgACAAQABMAPAAAAAEAAQACAAIAAAAEAAgACAAQABP4PAAAAAEAAQACAAIAAAAEEAgQCAgQCBP8PAAAAAGAAYACQAJAACAEEAgQCAgQCBP8PAAAAAAAAAAD/D/8P/w//D/8P/w8AAAAAAAAAAAAAAAD/DwEIAQgBCAEI/w8AAAAAAAAAAAAAAADADwAAAAAAAAAAAAAAAAAAAAAAAAAAAADADwAIAAgACAAIAAgAAAAAAAAAAAAAAADADwAIAAgACAAIwA8AAAAAAAAAAAAAAADADwAIAAgACAAI/w8AAAAAAAAAAAAAAADBDwEIAQgBCAEI/w8AAAAAAAAAAAAAAAD/DwEIAQgBCAEI/w8AAAAAAABgAPAA+AH8A/4H/w//D/4H/AP4AfAAYABgAJAACAEEAgIEAQgBCAIEBAIIAZAAYABAAIAAAAEAAgAAAAAAAAAAAAAAAAAAAABAAIAAAAEAAgAEAAgACAAEAAAAAAAAAABAAIAAAAEAAgAEAAgACAAEAAIAAYAAQABAAIAAAAEAAgAEAAgACAAEBAIIAZAAYABAAIAAAAEAAgIEAQgBCAIEBAIIAZAAYABgAJAACAEEAgIEAQgBCAIEBAIIAZAAYAAAAAAA+AH+B/8P/w//D/8P/gf4AQAAAAAAAAAA+AEGBgEIAQgBCAEIBgb4AQAAAAAAAAAAwAEABgAAAAAAAAAAAAAAAAAAAAAAAAAAwAEABgAIAAgACAAIAAQAAAAAAAAAAAAAwAEABgAIAAgACAAIAAbAAQAAAAAAAAAAwAEABgAIAAgACAAIBgb4AQAAAAAAAAAAwAECBgEIAQgBCAEIBgb4AQAAAAAAAAAA+AEGBgEIAQgBCAEIBgb4AQAAAABgAPAA+AH+B/8P/w/+B/4H/gf8A/wD/ANgAJAACAEGBgEIAQgCBAIEAgQEAgQC/ANAAIAAAAEABgAIAAAAAAAAAAAAAAAAAABAAIAAAAEABgAIAAgABAAEAAQAAgAAAABAAIAAAAEABgAIAAgABAAEAAQAAgACwANAAIAAAAEABgAIAAgABAAEAAQEAgQC/ANAAIAA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/w9mBmYGAAAYAMwDTAJMAv4D/gf+B/4H/w9mBmYGAABAAMAAwADBAcMB/wf/D8MBwQHAAMAAQABgAPAA8ACYAZgB+AH4AfwD9gbyBGAAkABgAPAA8ACYAZgB+AH4AfwD9gbyBPAAYAAgAGAA4ADgAeADIAD/D/4H/AMAAGYGmQkgAGAA4ADgAeADIAD/D/4H/AMAADMDzAzwAPgB/APsA+wD/AP4AfAAYAAgAEAAIADwAPgB/APsA+wD/AP4AfAAYABAACAAQABgACAA/AMEArQCBAL0AvwD/Qv7DZgBmAFgACAA/AMEArQFBAL0AvwD/Qv7DZgBmAFgACAA/AMEArQCBAL0Av0L/wv8AJgBmAFgBvAG+AH8A/4H/w8GBrYGNga2BjYG/w9gBvAG+AH8A/4H/w8GBrYGtga2BjYG/w9gAPAE+AH8A/4H/w8GBrYGNga2BjYG/w8GBg8P/w/2Bp4H/gf8A/sN+Qn4AZwDnAMGBg8P/w/2Bp4H/gf8C/sL+QH4AZwDnAMAAAAABgaZCWEIbQthCG0LYQhnDvgBAAAAAAAABgaZCWEIYQhhCGEIYQhnDvgBAAAAAAAABgaZCWEIbQhhCGEIYQhnDvgBAAAAAAAABgaZCWEIbQthCGEIYQhnDvgBAAAAAAAABgaZCWEIbQthCG0IYQhnDvgBAAAAAGEIYQjzDPcO/w9tC/8P/w8AAAAAAAAAAGEIYQjzDPcO/w//D/8P/w8AAAAAAAAGBgIEAgQFCgcOVw//D/cO/w+fD58Pnw8DDAIEAgQFCgcOVw//D/cO/w+fD58Pnw8GBgIEAgQFCgcOVw//D/8P/w+fD58Pnw9AAOAAUAFIAvwBSAJQAeAAQAAgADAACABAAOAAUAFIAvwBSAJQAeAAQABAAGAAQAAAAAAAAAB/AEEDQQVBD/8P/w+GAYYBAAAAAAAAAAB/AEEDQQVBD/8P/w+KAgQBAABAAKABYABsA/4H/w//D/8P/w/+B/wDmAFAAKABYABsA/4H/wP/Af8D/w/+B/wDmAFAAKABYABsA/4B/wH/AP8B/wP+B/wDmAFgAPAA/AP+B/4H2gb+B1QFrAaoAlAB4ABIAkgCAABIAkgC/geqCv4H/w9JCv8P/w8kAUgCAABIAkgC/geqCv4H/w9JCv8P/w+QBEgCAABIAkgC/geqCv4H/w9JCv8P/w/4AQQC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" };
+/*FW_END*/
+
+/* ── target: ATmega328P ──────────────────────────────────────────────── */
+const PAGE_SIZE = 128, FLASH_SIZE = 32768, EEPROM_SIZE = 1024;
+const FUSES = { lfuse: 0xE2, hfuse: 0xD7, efuse: 0xFF };
+const SIGNATURES = { "1e950f": "ATmega328P", "1e9514": "ATmega328", "1e9516": "ATmega328PB", "1e9515": "ATmega328P (auto)" };
+
+/* ── the album in EEPROM (must match album.h in the sketch) ───────────── */
+const ALBUM = { MAGIC: [0x4B, 0x43, 0x50], VERSION: 2, COUNT: 4, SELECTED: 5, BASE: 0x10, SIZE: 24, SLOTS: 40,
+                CHOICE: 0x3E0, CHOICE_SIZE: 32 };  // choice: bit (uid & 7) of byte uid/8 = that built-in is shown
+
+/* ── USBasp transport (protocol per avrdude src/usbasp.c + usbasp firmware)
+   Every call is a vendor control transfer: bRequest = function id,
+   wValue = send[0..1], wIndex = send[2..3]. Same code as the flasher. */
+const VID = 0x16C0, PID = 0x05DC;
+const OLD_VID = 0x03EB, OLD_PID = 0xC7B4;
+const FN = { CONNECT: 1, DISCONNECT: 2, TRANSMIT: 3, READFLASH: 4, ENABLEPROG: 5,
+             WRITEFLASH: 6, READEEPROM: 7, WRITEEEPROM: 8, SETISPSCK: 10, CAPS: 127 };
+const BLOCK = 200;
+const FLAG_FIRST = 1, FLAG_LAST = 2;
+const SCK = { 5: 8000, 7: 32000, 8: 93750, 9: 187500, 10: 375000, 11: 750000 };
+
+const hooks = { log() {}, phase() {}, progress() {} };  // set by the UI
+const isp = { sckId: 10 };
+let dev = null;
+let sckControl = null;
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const hex2 = v => v.toString(16).toUpperCase().padStart(2, "0");
+
+async function ctrlIn(fn, s0, s1, s2, s3, len) {
+  const r = await dev.controlTransferIn({ requestType: "vendor", recipient: "device", request: fn,
+    value: s0 | (s1 << 8), index: s2 | (s3 << 8) }, len);
+  if (r.status !== "ok") throw new Error(`USB ${r.status} on function ${fn}`);
+  return new Uint8Array(r.data.buffer, r.data.byteOffset, r.data.byteLength);
+}
+async function ctrlOut(fn, s0, s1, s2, s3, data) {
+  const r = await dev.controlTransferOut({ requestType: "vendor", recipient: "device", request: fn,
+    value: s0 | (s1 << 8), index: s2 | (s3 << 8) }, data);
+  if (r.status !== "ok") throw new Error(`USB ${r.status} on function ${fn}`);
+  if (r.bytesWritten !== data.length) throw new Error(`short write: ${r.bytesWritten}/${data.length}`);
+}
+async function spi(a, b, c, d) {
+  const r = await ctrlIn(FN.TRANSMIT, a, b, c, d, 4);
+  if (r.length !== 4) throw new Error("USBasp: bad TRANSMIT response");
+  return r;
+}
+/* true if the programmer took the speed; never throws (old firmware has no
+   speed control and still works at its fixed default) */
+async function setSck(id) {
+  if (sckControl === false) return false;
+  let r, why;
+  try {
+    r = await ctrlIn(FN.SETISPSCK, id, 0, 0, 0, 4);
+    if (r.length === 1 && r[0] === 0) { sckControl = true; return true; }
+    why = r.length === 0 ? "empty reply — the function is not implemented" : `unexpected reply ${[...r].map(hex2).join(" ")}`;
+  } catch (e) { why = e.message; }
+  if (sckControl === null)
+    hooks.log(`this USBasp has no software speed control (${why}); it runs at its fixed default`, "w");
+  sckControl = false;
+  return false;
+}
+const ispConnect = () => ctrlIn(FN.CONNECT, 0, 0, 0, 0, 4);
+const ispDisconnect = () => ctrlIn(FN.DISCONNECT, 0, 0, 0, 0, 4);
+async function enableProg() {
+  const r = await ctrlIn(FN.ENABLEPROG, 0, 0, 0, 0, 4);
+  return r.length === 1 && r[0] === 0;
+}
+
+/* ── AVR ISP instructions ────────────────────────────────────────────── */
+async function readSignature() {
+  const b = [];
+  for (let i = 0; i < 3; i++) b.push((await spi(0x30, 0x00, i, 0x00))[3]);
+  return b;
+}
+const readLFuse = async () => (await spi(0x50, 0x00, 0x00, 0x00))[3];
+const readHFuse = async () => (await spi(0x58, 0x08, 0x00, 0x00))[3];
+const readEFuse = async () => (await spi(0x50, 0x08, 0x00, 0x00))[3];
+async function waitReady(timeoutMs = 5000) {
+  const t0 = performance.now();
+  for (;;) {
+    if (((await spi(0xF0, 0x00, 0x00, 0x00))[3] & 1) === 0) return;
+    if (performance.now() - t0 > timeoutMs) throw new Error("target stayed busy — programming timed out");
+    await sleep(2);
+  }
+}
+async function chipErase() {
+  await spi(0xAC, 0x80, 0x00, 0x00);
+  await sleep(15);
+  await waitReady();
+}
+async function writeFuses(f) {
+  await spi(0xAC, 0xA0, 0x00, f.lfuse); await sleep(12);
+  await spi(0xAC, 0xA8, 0x00, f.hfuse); await sleep(12);
+  await spi(0xAC, 0xA4, 0x00, f.efuse); await sleep(12);
+}
+const efuseEq = (a, b) => (a & 0x07) === (b & 0x07);
+const clockIs8MHz = l => (l & 0x80) !== 0 && (l & 0x0F) === 0x02;
+
+async function writeFlash(image, onProgress) {
+  let addr = 0;
+  while (addr < image.length) {
+    const n = Math.min(BLOCK, image.length - addr);
+    let flags = 0;
+    if (addr === 0) flags |= FLAG_FIRST;
+    if (addr + n >= image.length) flags |= FLAG_LAST;
+    await ctrlOut(FN.WRITEFLASH, addr & 0xFF, (addr >> 8) & 0xFF,
+      PAGE_SIZE & 0xFF, (flags & 0x0F) + ((PAGE_SIZE & 0xF00) >> 4), image.subarray(addr, addr + n));
+    addr += n;
+    onProgress(addr, image.length);
+  }
+}
+async function readFlash(start, length, onProgress = () => {}) {
+  const out = new Uint8Array(length);
+  let done = 0;
+  while (done < length) {
+    const n = Math.min(BLOCK, length - done), a = start + done;
+    const r = await ctrlIn(FN.READFLASH, a & 0xFF, (a >> 8) & 0xFF, 0, 0, n);
+    if (r.length !== n) throw new Error(`short read at 0x${a.toString(16)}: got ${r.length}/${n}`);
+    out.set(r, done);
+    done += n;
+    onProgress(done, length);
+  }
+  return out;
+}
+
+/* EEPROM: block reads through USBASP_FUNC_READEEPROM (one transfer per 200
+   bytes); byte-by-byte ISP reads as a fallback. Only the bytes that matter
+   are read: on a slow programmer every byte costs milliseconds. Writes are
+   single-byte ISP commands, only for bytes that actually change, then just
+   those are read back. */
+async function readEepromRange(from, len) {
+  const out = new Uint8Array(len);
+  try {
+    for (let d = 0; d < len; d += BLOCK) {
+      const n = Math.min(BLOCK, len - d), a = from + d;
+      const r = await ctrlIn(FN.READEEPROM, a & 0xFF, a >> 8, 0, 0, n);
+      if (r.length !== n) throw new Error(`short EEPROM read at ${a}: got ${r.length}/${n}`);
+      out.set(r, d);
+    }
+  } catch (e) {
+    hooks.log(`block EEPROM read failed (${e.message}) — reading byte by byte`, "w");
+    for (let i = 0; i < len; i++) {
+      const a = from + i;
+      out[i] = (await spi(0xA0, (a >> 8) & 0x03, a & 0xFF, 0))[3];
+    }
+  }
+  return out;
+}
+const readEeprom = () => readEepromRange(0, EEPROM_SIZE);
+
+/* a partial copy of the EEPROM: bytes are read the first time they matter */
+const eepromCache = () => ({ ee: new Uint8Array(EEPROM_SIZE).fill(0xFF), known: new Uint8Array(EEPROM_SIZE) });
+async function loadEeprom(c, from, to) {
+  to = Math.min(to, EEPROM_SIZE);
+  for (let a = from; a < to;) {
+    if (c.known[a]) { a++; continue; }
+    let b = a;
+    while (b < to && !c.known[b]) b++;
+    c.ee.set(await readEepromRange(a, b - a), a);
+    c.known.fill(1, a, b);
+    a = b;
+  }
+}
+/* the album's bytes: its header, the drawings it counts, the choice */
+async function loadAlbum(c) {
+  await loadEeprom(c, 0, ALBUM.BASE);
+  if (!albumHeaderOk(c.ee)) return null;
+  await loadEeprom(c, ALBUM.BASE, ALBUM.BASE + c.ee[ALBUM.COUNT] * ALBUM.SIZE);
+  if (c.ee[3] >= 2) await loadEeprom(c, ALBUM.CHOICE, ALBUM.CHOICE + ALBUM.CHOICE_SIZE);
+  return parseAlbum(c.ee);
+}
+/* every byte composeEeprom may change for `next`, so the diff is exact */
+async function loadTouched(c, next) {
+  await loadEeprom(c, 0, ALBUM.BASE);
+  await loadEeprom(c, ALBUM.BASE, ALBUM.BASE + next.drawings.length * ALBUM.SIZE);
+  await loadEeprom(c, ALBUM.CHOICE, ALBUM.CHOICE + ALBUM.CHOICE_SIZE);
+}
+/* read back just `addrs`, in a few contiguous spans */
+async function readBack(addrs) {
+  const sorted = [...addrs].sort((a, b) => a - b), back = new Map();
+  for (let i = 0; i < sorted.length;) {
+    let j = i;
+    while (j + 1 < sorted.length && sorted[j + 1] - sorted[j] <= 8) j++;
+    const from = sorted[i], bytes = await readEepromRange(from, sorted[j] - from + 1);
+    for (let k = i; k <= j; k++) back.set(sorted[k], bytes[sorted[k] - from]);
+    i = j + 1;
+  }
+  return back;
+}
+async function writeEepromBytes(addrs, image, onProgress = () => {}, settleMs = 4) {
+  let i = 0;
+  for (const a of addrs) {
+    await spi(0xC0, (a >> 8) & 0x03, a & 0xFF, image[a]);
+    await sleep(settleMs);  // t_WD_EEPROM is 3.6 ms
+    onProgress(++i, addrs.length);
+  }
+}
+
+/* ── album encode / decode ──────────────────────────────────────────── */
+const sameRows = (a, b) => a.length === 12 && b.length === 12 && a.every((w, y) => (w & 0xFFF) === (b[y] & 0xFFF));
+
+/* The album: { drawings (oldest first), selected, builtins (uids shown) }.
+   Version 1 had no choice — like the firmware, read it as the defaults. */
+const albumHeaderOk = ee => ALBUM.MAGIC.every((m, i) => ee[i] === m) &&
+  (ee[3] === 1 || ee[3] === ALBUM.VERSION) && ee[ALBUM.COUNT] <= ALBUM.SLOTS;
+function parseAlbum(ee) {
+  const version = ee[3];
+  if (!albumHeaderOk(ee)) return null;
+  const drawings = [];
+  for (let i = 0; i < ee[ALBUM.COUNT]; i++) {
+    const rows = [];
+    for (let y = 0; y < 12; y++) {
+      const a = ALBUM.BASE + i * ALBUM.SIZE + y * 2;
+      rows.push((ee[a] | (ee[a + 1] << 8)) & 0x0FFF);
+    }
+    drawings.push(rows);
+  }
+  const builtins = version === 1 ? ON_DEVICE_AT_START.slice()
+    : LIBRARY.map(s => s.uid).filter(u => ee[ALBUM.CHOICE + (u >> 3)] & (1 << (u & 7)));
+  return { drawings, selected: ee[ALBUM.SELECTED], builtins, version };
+}
+const freshAlbum = () => ({ drawings: [], selected: 0, builtins: ON_DEVICE_AT_START.slice() });
+
+function composeEeprom(old, { drawings, selected, builtins }) {
+  const ee = Uint8Array.from(old);
+  ee.set([...ALBUM.MAGIC, ALBUM.VERSION, drawings.length, selected], 0);
+  drawings.forEach((rows, i) => rows.forEach((w, y) => {
+    const a = ALBUM.BASE + i * ALBUM.SIZE + y * 2;
+    ee[a] = w & 0xFF;
+    ee[a + 1] = (w >> 8) & 0x0F;
+  }));
+  ee.fill(0, ALBUM.CHOICE, ALBUM.CHOICE + ALBUM.CHOICE_SIZE);
+  for (const u of builtins) ee[ALBUM.CHOICE + (u >> 3)] |= 1 << (u & 7);
+  return ee;
+}
+
+/* the pictures the KeyChainino shows, in its order: drawings newest
+   first, then the chosen built-ins in library order */
+const chosenInOrder = uids => LIBRARY.filter(s => uids.includes(s.uid));
+function deviceList(album) {
+  return [...album.drawings.slice().reverse().map(rows => ({ rows, sticker: null })),
+          ...chosenInOrder(album.builtins).map(s => ({ rows: s.frames[0], sticker: s }))];
+}
+
+/* changed addresses, pictures first and the header last: if the cable
+   slips halfway, the old count never points at a half-written slot */
+function eepromDiff(a, b) {
+  const body = [], head = [];
+  for (let i = 0; i < EEPROM_SIZE; i++) if (a[i] !== b[i]) (i < ALBUM.BASE ? head : body).push(i);
+  return body.concat(head);
+}
+
+/* the album after adding `rows`: newest first on the device, so it shows
+   first after the restart; an identical drawing is just re-selected */
+function albumWith(album, rows) {
+  const drawings = album.drawings.slice();
+  const dup = drawings.findIndex(d => sameRows(d, rows));
+  if (dup >= 0) return { drawings, builtins: album.builtins, selected: drawings.length - 1 - dup, existed: true, dropped: 0 };
+  let dropped = 0;
+  if (drawings.length >= ALBUM.SLOTS) { drawings.shift(); dropped = 1; }
+  drawings.push(Array.from(rows, w => w & 0xFFF));
+  return { drawings, builtins: album.builtins, selected: 0, existed: false, dropped };
+}
+/* the album with built-in `uid` shown too, selected so the KeyChainino
+   restarts on it */
+function albumWithBuiltin(album, uid) {
+  const existed = album.builtins.includes(uid);
+  const builtins = existed ? album.builtins.slice() : [...album.builtins, uid];
+  const at = chosenInOrder(builtins).findIndex(s => s.uid === uid);
+  return { drawings: album.drawings.slice(), builtins, selected: album.drawings.length + at, existed, dropped: 0 };
+}
+/* the grown-ups' editor: drop some drawings (matched by content, so a
+   list read earlier can never remove the wrong one) and set the built-ins */
+function albumEdited(album, { removeDrawings = [], builtins }) {
+  const drawings = album.drawings.filter(d => !removeDrawings.some(r => sameRows(r, d)));
+  return { drawings, builtins: builtins.slice(), selected: 0,
+           removed: album.drawings.length - drawings.length };
+}
+/* the album minus the drawing that looks exactly like `rows` — matched by
+   content, not by position, so a list read earlier can never delete the
+   wrong one if the KeyChainino changed since */
+function albumWithoutDrawing(album, rows) {
+  const drawings = album.drawings.slice();
+  const i = drawings.findIndex(d => sameRows(d, rows));
+  if (i < 0) return { drawings, builtins: album.builtins, selected: album.selected, missing: true };
+  drawings.splice(i, 1);
+  return { drawings, builtins: album.builtins, selected: 0, missing: false };
+}
+function albumWithout(album, index) {  // index in device order (newest first)
+  const drawings = album.drawings.slice();
+  drawings.splice(drawings.length - 1 - index, 1);
+  return { drawings, builtins: album.builtins, selected: 0 };
+}
+
+let fwCache = null;
+function firmwareImage() {
+  if (!FIRMWARE) throw new Error("the Pictures firmware is not embedded in this page — run tools/build.mjs");
+  if (fwCache) return fwCache;
+  const bin = atob(FIRMWARE.b64);
+  const used = bin.length;
+  const img = new Uint8Array(Math.ceil(used / PAGE_SIZE) * PAGE_SIZE).fill(0xFF);
+  for (let i = 0; i < used; i++) img[i] = bin.charCodeAt(i);
+  return (fwCache = { image: img, used });
+}
+
+/* ── sessions ───────────────────────────────────────────────────────── */
+
+/* A factory-fresh ATmega328P runs at 1 MHz, where ISP needs SCK below
+   250 kHz: always handshake slowly, speed up once the clock is known. */
+async function enterProgMode(sckId, label) {
+  const applied = await setSck(sckId);
+  await ispConnect();
+  await sleep(120);
+  if (!await enableProg()) {
+    throw new Error(applied
+      ? `the KeyChainino does not answer at ${SCK[sckId] / 1000} kHz (${label}) — check the ISP cable, its orientation, and that the board has power`
+      : `the KeyChainino does not answer (${label}). Check the ISP cable and its orientation. A factory-fresh chip ` +
+        `also needs the USBasp's 'slow SCK' jumper if the programmer cannot change speed`);
+  }
+  return applied;
+}
+
+async function targetInfo() {
+  const sig = await readSignature();
+  const part = SIGNATURES[sig.map(hex2).join("").toLowerCase()];
+  if (!part) throw new Error(`unknown chip signature ${sig.map(v => "0x" + hex2(v)).join(" ")} — wrong chip, or a wiring problem`);
+  const l = await readLFuse(), h = await readHFuse(), e = await readEFuse();
+  return { part, l, h, e, fusesOk: l === FUSES.lfuse && h === FUSES.hfuse && efuseEq(e, FUSES.efuse) };
+}
+/* Once a KeyChainino has been seen running at 8 MHz, go straight in at full
+   speed: one handshake instead of two. If that fails (another, factory-
+   fresh chip on the cable), fall back to the slow handshake. */
+async function openTarget() {
+  if (!dev) throw new Error("no programmer connected");
+  if (isp.knownFast) {
+    try {
+      await enterProgMode(isp.sckId, "programming");
+      hooks.progress(0.12, 1);
+      const info = await targetInfo();
+      if (clockIs8MHz(info.l)) return info;
+    } catch { /* not this time: the slow way below */ }
+    isp.knownFast = false;
+    try { await ispDisconnect(); } catch { /* already released */ }
+    await sleep(60);
+  }
+  await enterProgMode(8, "handshake");
+  hooks.progress(0.08, 1);
+  const info = await targetInfo();
+  hooks.progress(0.12, 1);
+  if (clockIs8MHz(info.l)) {
+    await ispDisconnect();
+    await sleep(60);
+    await enterProgMode(isp.sckId, "programming");
+    isp.knownFast = true;
+  }
+  return info;
+}
+async function closeTarget() {
+  try { await ispDisconnect(); } catch { /* the link may already be gone */ }
+}
+
+/* Is this exact Pictures firmware on the chip? Compares the start of flash
+   (vectors + PROGMEM pictures) and the end of the image. */
+/* where this page's firmware keeps its build id ("KCP-BUILD " + 16 hex) */
+let buildIdSpanCache;
+function buildIdSpan() {
+  if (buildIdSpanCache !== undefined) return buildIdSpanCache;
+  const { image, used } = firmwareImage(), tag = [..."KCP-BUILD "].map(ch => ch.charCodeAt(0));
+  buildIdSpanCache = null;
+  outer: for (let i = 0; i + tag.length + 16 <= used; i++) {
+    for (let k = 0; k < tag.length; k++) if (image[i + k] !== tag[k]) continue outer;
+    buildIdSpanCache = [i, tag.length + 16];
+    break;
+  }
+  return buildIdSpanCache;
+}
+/* Is this exact Pictures firmware on the chip? Reads its 26-byte build id
+   (a fingerprint of the sources) at the address this page's image has it;
+   any other program has other bytes there. Images without an id fall back
+   to comparing the start and end of flash. */
+async function firmwareMatches() {
+  if (!FIRMWARE) return false;
+  const { image, used } = firmwareImage();
+  const span = buildIdSpan();
+  if (span) {
+    const [at, len] = span, b = await readFlash(at, len);
+    return b.every((v, i) => v === image[at + i]);
+  }
+  const head = Math.min(1024, used);
+  const a = await readFlash(0, head);
+  for (let i = 0; i < head; i++) if (a[i] !== image[i]) return false;
+  const from = Math.max(head, used - 256);
+  const b = await readFlash(from, used - from);
+  for (let i = 0; i < b.length; i++) if (b[i] !== image[from + i]) return false;
+  return true;
+}
+/* progress of one job across its phases: span(a, b) maps a phase's own
+   (done, total) into [a, b] of the whole */
+const span = (a, b) => (d, t) => hooks.progress(a + (b - a) * (t ? d / t : 1), 1);
+function stopwatch() {
+  let t = performance.now();
+  const parts = [];
+  return {
+    lap(k) { const n = performance.now(); parts.push(`${k} ${((n - t) / 1000).toFixed(2)}s`); t = n; },
+    report: () => "timing: " + parts.join(" · "),
+  };
+}
+
+async function commitEeprom(before, after, [p0, p1] = [0, 1]) {
+  const addrs = eepromDiff(before, after);
+  hooks.log(`EEPROM: ${addrs.length} byte${addrs.length === 1 ? "" : "s"} to write`, "d");
+  if (!addrs.length) { hooks.progress(1, 1); return 0; }
+  const pw = p0 + (p1 - p0) * 0.85;
+  await writeEepromBytes(addrs, after, span(p0, pw));
+  let back = await readBack(addrs);
+  let bad = addrs.filter(a => back.get(a) !== after[a]);
+  if (bad.length) {  // one gentle retry: slower writes
+    hooks.log(`EEPROM verify: ${bad.length} byte(s) differ, rewriting slowly`, "w");
+    await writeEepromBytes(bad, after, () => {}, 12);
+    back = await readBack(bad);
+    bad = bad.filter(a => back.get(a) !== after[a]);
+    if (bad.length) throw new Error(`EEPROM verify failed at 0x${bad[0].toString(16)} — check the cable and try again`);
+  }
+  hooks.progress(p1, 1);
+  hooks.log("EEPROM written and verified", "g");
+  return addrs.length;
+}
+
+/* Read what is on the KeyChainino. */
+async function inspect() {
+  hooks.phase("Looking at the KeyChainino…");
+  try {
+    const t = await openTarget();
+    const installed = t.fusesOk && await firmwareMatches();
+    const album = await loadAlbum(eepromCache());
+    return { ...t, installed, album };
+  } finally { await closeTarget(); }
+}
+
+/* Change the album (mutate: album -> {drawings, builtins, selected}).
+   Only with this page's version of the Pictures program on the chip:
+   otherwise nothing is written and needInstall comes back (olderPictures:
+   a Pictures album is there, so it is an older version — an update keeps
+   the drawings). An older program may not understand this album layout. */
+async function updateAlbum(mutate) {
+  const sw = stopwatch();
+  hooks.phase("Talking to the KeyChainino…");
+  hooks.progress(0.04, 1);
+  try {
+    const t = await openTarget();                         sw.lap("connect"); hooks.progress(0.2, 1);
+    const installed = t.fusesOk && await firmwareMatches(); sw.lap("check");   hooks.progress(0.3, 1);
+    const c = eepromCache();
+    const album = await loadAlbum(c);                     sw.lap("read");    hooks.progress(0.4, 1);
+    if (!installed) return { needInstall: true, olderPictures: !!(t.fusesOk && album), fusesOk: t.fusesOk, part: t.part };
+    const next = mutate(album ?? freshAlbum());
+    await loadTouched(c, next);
+    hooks.phase("Writing to the KeyChainino…");
+    const after = composeEeprom(c.ee, next);
+    const written = await commitEeprom(c.ee, after, [0.4, 1]); sw.lap("write + verify");
+    hooks.log(sw.report(), "d");
+    return { album: parseAlbum(after), info: next, written, installed, part: t.part, fusesOk: t.fusesOk };
+  } finally { await closeTarget(); }   // RESET released: it restarts and shows the picture
+}
+
+/* Install (or update) the Pictures program. The fuses keep EEPROM through
+   the chip erase (EESAVE), so existing drawings survive an update. */
+async function installFirmware() {
+  const { image, used } = firmwareImage();
+  hooks.phase("Installing the Pictures program…");
+  hooks.log(`installing ${FIRMWARE.file} (${used} B, built ${FIRMWARE.built})`, "i");
+  try {
+    await enterProgMode(8, "bootstrap");
+    const sig = await readSignature();
+    const part = SIGNATURES[sig.map(hex2).join("").toLowerCase()];
+    if (!part) throw new Error(`unknown chip signature ${sig.map(v => "0x" + hex2(v)).join(" ")}`);
+
+    let l = await readLFuse(), h = await readHFuse(), e = await readEFuse();
+    if (l !== FUSES.lfuse || h !== FUSES.hfuse || !efuseEq(e, FUSES.efuse)) {
+      hooks.log(`writing fuses (were 0x${hex2(l)}/0x${hex2(h)}/0x${hex2(e)})`, "i");
+      await writeFuses(FUSES);
+      await ispDisconnect();            // clock fuses latch on the next entry
+      await sleep(150);
+      await enterProgMode(8, "after fuse write");
+      l = await readLFuse(); h = await readHFuse(); e = await readEFuse();
+      if (l !== FUSES.lfuse || h !== FUSES.hfuse || !efuseEq(e, FUSES.efuse))
+        throw new Error(`fuses did not stick: read back 0x${hex2(l)}/0x${hex2(h)}/0x${hex2(e)}`);
+    }
+    await ispDisconnect();
+    await sleep(60);
+    await enterProgMode(isp.sckId, "programming");
+
+    await chipErase();
+    await writeFlash(image, (d, t) => hooks.progress(d, t * 2));
+    const back = await readFlash(0, image.length, (d, t) => hooks.progress(t + d, t * 2));
+    for (let i = 0; i < image.length; i++) {
+      if (back[i] !== image[i])
+        throw new Error(`verify failed at 0x${i.toString(16).toUpperCase()}: wrote 0x${hex2(image[i])}, read 0x${hex2(back[i])}`);
+    }
+    hooks.log("Pictures program written and verified", "g");
+
+    isp.knownFast = true;   // fused for 8 MHz now: the next session needs one handshake
+    const ee = await readEeprom();
+    const album = parseAlbum(ee);
+    if (!album) {
+      hooks.log("no album in EEPROM yet (or another program's data): starting one with the default pictures", "d");
+      await commitEeprom(ee, composeEeprom(ee, freshAlbum()));
+    } else if (album.version !== ALBUM.VERSION) {
+      hooks.log("upgrading the album to this version (drawings kept, default pictures chosen)", "d");
+      await commitEeprom(ee, composeEeprom(ee, album));
+    }
+  } finally { await closeTarget(); }
+}
+
+/* ── programmer connection ──────────────────────────────────────────── */
+async function attach(device) {
+  dev = device;
+  await dev.open();
+  if (dev.configuration === null) await dev.selectConfiguration(1);
+  try { await dev.claimInterface(0); } catch (e) { hooks.log("could not claim interface (harmless): " + e.message, "d"); }
+  sckControl = null;
+  await setSck(isp.sckId);  // probe speed control now, not mid-write
+  return `${dev.productName || "USBasp"} (${hex2(dev.vendorId >> 8)}${hex2(dev.vendorId & 255)}:${hex2(dev.productId >> 8)}${hex2(dev.productId & 255)})`;
+}
+const USB_FILTERS = [{ vendorId: VID, productId: PID }, { vendorId: OLD_VID, productId: OLD_PID }];
+const isUsbasp = d => USB_FILTERS.some(f => f.vendorId === d.vendorId && f.productId === d.productId);
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     UI
+     ═══════════════════════════════════════════════════════════════════ -->
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("kcp." + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("kcp." + k, JSON.stringify(v)); } catch { /* private mode: fine */ } },
+};
+
+/* ════════════════════════════════════════════════════════════════════
+   Sound: tiny WebAudio synth, nothing to download
+   ════════════════════════════════════════════════════════════════════ */
+const Sound = (() => {
+  let ctx = null, on = store.get("sound", true);
+  const PENTA = [1046.5, 880, 784, 659.3, 587.3, 523.3, 440, 392, 329.6, 293.7, 261.6, 220];  // top row = highest
+  const ready = () => {
+    if (!on) return null;
+    try { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); } catch { return null; }
+    if (ctx.state === "suspended") ctx.resume();
+    return ctx;
+  };
+  function tone(f, dur = .12, { type = "sine", vol = .12, at = 0, to = null } = {}) {
+    const c = ready(); if (!c) return;
+    const t = c.currentTime + at, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    if (to) o.frequency.exponentialRampToValueAtTime(to, t + dur);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .01);
+    g.gain.exponentialRampToValueAtTime(.0005, t + dur);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + .02);
+  }
+  function noise(dur = .35, vol = .12) {
+    const c = ready(); if (!c) return;
+    const b = c.createBuffer(1, c.sampleRate * dur, c.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(), t = c.currentTime;
+    s.buffer = b; f.type = "bandpass"; f.Q.value = 1.2;
+    f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(4000, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    s.connect(f).connect(g).connect(c.destination); s.start();
+  }
+  return {
+    get on() { return on; },
+    set on(v) { on = v; store.set("sound", v); },
+    led(y, lit) { lit ? tone(PENTA[y], .16, { type: "triangle", vol: .13 }) : tone(PENTA[y] / 2, .08, { vol: .07 }); },
+    whoosh: () => noise(.4),
+    boing: () => tone(220, .3, { type: "sine", to: 660, vol: .14 }),
+    slide: dir => tone(dir > 0 ? 500 : 700, .12, { type: "triangle", to: dir > 0 ? 800 : 450, vol: .08 }),
+    dance() { [523, 659, 784, 1046].forEach((f, i) => tone(f, .14, { type: "square", vol: .05, at: i * .09 })); },
+    launch: () => tone(180, .9, { type: "sawtooth", to: 900, vol: .05 }),
+    yay() { [523, 659, 784, 1046, 784, 1046].forEach((f, i) => tone(f, .2, { type: "triangle", vol: .12, at: i * .1 })); },
+    uhoh() { tone(392, .22, { vol: .12 }); tone(311, .35, { vol: .12, at: .22 }); },
+    nope: () => tone(200, .15, { type: "square", vol: .05 }),
+  };
+})();
+
+/* ════════════════════════════════════════════════════════════════════
+   Pixels. A picture is 12 row words (bit x = column x), exactly like the
+   firmware. A screen is a level per LED (0 off, 1 dim, 3 bright),
+   row-major: lv[y * 12 + x].
+   ════════════════════════════════════════════════════════════════════ */
+const rowsToLevels = rows => {
+  const lv = new Uint8Array(144);
+  for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) if ((rows[y] >> x) & 1) lv[y * 12 + x] = 3;
+  return lv;
+};
+const isBlank = rows => rows.every(w => !(w & 0xFFF));
+const int8 = v => (v > 127 ? v - 256 : v);
+
+/* ── the device's animations, same integer maths as show.cpp ─────────── */
+function isin(p) { p &= 255; const h = p & 127; let v = (h * (128 - h)) >> 5; if (v > 127) v = 127; return p & 128 ? -v : v; }
+const icos = p => isin(p + 64);
+const px2 = c2 => ((c2 + 12 + 128) >> 1) - 64;
+const tdiv = (a, b) => Math.trunc(a / b);
+const FX_MS = { hop: 800, jelly: 1200, sparkle: 1500, wave: 1600, flip: 1000, beat: 900, burst: 1300, spin: 1100 };
+
+function fxFrame(name, t, pic, st) {
+  if (t >= FX_MS[name]) return null;
+  const lv = new Uint8Array(144);
+  const put = (x, y, v) => { if (x >= 0 && x < 12 && y >= 0 && y < 12) lv[y * 12 + x] = v; };
+  const lit = (x, y) => x >= 0 && x < 12 && y >= 0 && y < 12 && ((pic[y] >> x) & 1);
+  const each = fn => { for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) if ((pic[y] >> x) & 1) fn(x, y); };
+  switch (name) {
+    case "hop": {
+      const MS = [340, 260, 200], PX = [4, 2, 1];
+      let start = 0;
+      for (let i = 0; i < 3; i++) {
+        if (t < start + MS[i]) {
+          const p = tdiv((t - start) * 256, MS[i]);
+          const dy = -((PX[i] * p * (256 - p) + 8192) >> 14);
+          each((x, y) => put(x, y + dy, 3));
+          return lv;
+        }
+        start += MS[i];
+      }
+      return null;
+    }
+    case "jelly": {
+      const T = 1200, amp = tdiv((T - t) * 640, T), top = tdiv(isin(tdiv(t * 256, 240)) * amp, 127);
+      each((x, y) => put(x + ((tdiv(top * (11 - y), 11) + 128) >> 8), y, 3));
+      return lv;
+    }
+    case "sparkle": {
+      const gen = tdiv(t, 70);
+      if (st.gen === gen && st.lv) return st.lv;
+      if (!st.sp) st.sp = Array.from({ length: 6 }, () => ({ x: 0, y: 0, age: 3 }));
+      st.gen = gen;
+      for (const s of st.sp) {
+        if (s.age < 3) s.age++;
+        if (s.age >= 3 && t < 1250 && Math.random() < .5) {
+          for (let k = 0; k < 6; k++) {
+            const x = Math.floor(Math.random() * 12), y = Math.floor(Math.random() * 12);
+            if (!lit(x, y)) { Object.assign(s, { x, y, age: 0 }); break; }
+          }
+        }
+      }
+      each((x, y) => put(x, y, Math.random() < 1 / 6 ? 1 : 3));
+      for (const s of st.sp) {
+        if (s.age === 0) { put(s.x - 1, s.y, 1); put(s.x + 1, s.y, 1); put(s.x, s.y - 1, 1); put(s.x, s.y + 1, 1); }
+        if (s.age < 2) put(s.x, s.y, 3); else if (s.age === 2) put(s.x, s.y, 1);
+      }
+      return (st.lv = lv);
+    }
+    case "wave": {
+      const T = 1600, edge = Math.min(t, T - t), amp = edge >= 200 ? 384 : tdiv(edge * 384, 200);
+      const base = tdiv(t * 256, 500);
+      each((x, y) => put(x, y + ((tdiv(isin(base - x * 26) * amp, 127) + 128) >> 8), 3));
+      return lv;
+    }
+    case "flip": {
+      const c = icos(tdiv(t * 256, 1000));
+      each((x, y) => put(px2(((2 * x - 11) * c) >> 7), y, 3));
+      return lv;
+    }
+    case "beat": {
+      let s = 256;
+      if (t < 240) s += tdiv(isin(tdiv(t * 128, 240)) * 100, 127);
+      else if (t >= 300 && t < 520) s += tdiv(isin(tdiv((t - 300) * 128, 220)) * 64, 127);
+      const src = Array.from({ length: 12 }, (_, o) => px2(tdiv((2 * o - 11) * 256, s)));
+      for (let oy = 0; oy < 12; oy++) for (let ox = 0; ox < 12; ox++) if (lit(src[ox], src[oy])) put(ox, oy, 3);
+      return lv;
+    }
+    case "burst": {
+      const k = isin(tdiv(t * 128, 1300)), e = tdiv(k * k, 127), s = 256 + e * 5, ang = e >> 1;
+      const c = icos(ang), sn = isin(ang);
+      each((x, y) => {
+        const x2 = 2 * x - 11, y2 = 2 * y - 11;
+        const rx = (x2 * c - y2 * sn) >> 7, ry = (x2 * sn + y2 * c) >> 7;
+        put(px2((rx * s) >> 8), px2((ry * s) >> 8), 3);
+      });
+      return lv;
+    }
+    case "spin": {
+      const ang = 127 - icos(tdiv(t * 128, 1100)), c = icos(ang), sn = isin(ang);
+      for (let oy = 0; oy < 12; oy++) for (let ox = 0; ox < 12; ox++) {
+        const x2 = 2 * ox - 11, y2 = 2 * oy - 11;
+        if (lit(px2((x2 * c + y2 * sn) >> 7), px2((y2 * c - x2 * sn) >> 7))) put(ox, oy, 3);
+      }
+      return lv;
+    }
+  }
+  return null;
+}
+
+/* a built-in's hand-made animation as a timeline (steps from build.mjs) */
+function timeline(sticker) {
+  let t = 0;
+  return sticker.steps.map(s => {
+    const fx = s[0] & 0x80 ? FX_NAMES[s[0] & 0x1F] : null;
+    const e = { s, fx, start: t, dur: fx ? FX_MS[fx] : s[3] * 10 };
+    t += e.dur;
+    return e;
+  });
+}
+function stickerFrame(sticker, tl, t, st) {
+  const e = tl.find(e => t < e.start + e.dur);
+  if (!e) return null;
+  if (e.fx) return fxFrame(e.fx, t - e.start, sticker.frames[0], st[e.start] ||= {}) || rowsToLevels(sticker.frames[0]);
+  const [b0, dx, dy] = e.s, rows = sticker.frames[b0 & 0x1F], v = b0 & 0x20 ? 1 : 3, mirror = b0 & 0x40;
+  const lv = new Uint8Array(144);
+  for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) {
+    if (!((rows[y] >> x) & 1)) continue;
+    const X = (mirror ? 11 - x : x) + int8(dx), Y = y + int8(dy);
+    if (X >= 0 && X < 12 && Y >= 0 && Y < 12) lv[Y * 12 + X] = v;
+  }
+  return lv;
+}
+const timelineLength = tl => (tl.length ? tl.at(-1).start + tl.at(-1).dur : 0);
+
+/* ── thumbnails ──────────────────────────────────────────────────────── */
+function drawThumb(cv, lv, px = 8) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1), S = 12 * px * dpr;
+  if (cv.width !== S) { cv.width = S; cv.height = S; }
+  const g = cv.getContext("2d"), c = S / 12;
+  g.fillStyle = "#2c2530"; g.fillRect(0, 0, S, S);
+  for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) {
+    const v = lv[y * 12 + x];
+    g.fillStyle = v === 3 ? "#ff3d63" : v === 1 ? "#8a3a4c" : "#463b4b";
+    g.beginPath(); g.arc((x + .5) * c, (y + .5) * c, c * (v ? .42 : .3), 0, 7); g.fill();
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   The drawing board
+   ════════════════════════════════════════════════════════════════════ */
+const ledsEl = $("leds");
+const cells = [];
+for (let i = 0; i < 144; i++) { const c = document.createElement("i"); ledsEl.appendChild(c); cells.push(c); }
+
+let pad = (() => { const s = store.get("pad", null); return Array.isArray(s) && s.length === 12 ? s.map(w => w & 0xFFF) : new Array(12).fill(0); })();
+let padSticker = store.get("padSticker", null);  // id while the pad is an untouched built-in
+const undo = [];
+let shown = new Uint8Array(144);
+
+function show(lv) {
+  for (let i = 0; i < 144; i++) {
+    if (lv[i] === shown[i]) continue;
+    cells[i].className = lv[i] === 3 ? "on" : lv[i] === 1 ? "dim" : "";
+  }
+  shown = Uint8Array.from(lv);
+}
+const showPad = () => show(rowsToLevels(pad));
+const savePad = () => { store.set("pad", pad); store.set("padSticker", padSticker); };
+function remember() { undo.push({ pad: pad.slice(), padSticker }); if (undo.length > 60) undo.shift(); }
+
+/* ── animation runner: one thing moves at a time ─────────────────────── */
+let anim = null;
+function play(frameFn, onDone) {
+  stopAnim();
+  const a = { t0: performance.now(), frameFn, onDone };
+  anim = a;
+  ledsEl.classList.add("busy");
+  const step = now => {
+    if (anim !== a) return;
+    const lv = frameFn(now - a.t0);
+    if (!lv) { anim = null; ledsEl.classList.remove("busy"); showPad(); onDone?.(); return; }
+    show(lv);
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function stopAnim() {
+  if (!anim) return;
+  anim = null;
+  ledsEl.classList.remove("busy");
+  showPad();
+}
+
+/* the device's slide: ease-out, one pixel past home, a dim smear */
+const SLIDE_PATH = [9, 6, 4, 2, 1, 0, -1, -1, 0];
+function slideTo(rows, dir) {
+  const from = Uint8Array.from(shown), to = rowsToLevels(rows);
+  let prev = from;
+  Sound.slide(dir);
+  play(t => {
+    const k = Math.floor(t / 16);
+    if (k >= SLIDE_PATH.length) return null;
+    const off = SLIDE_PATH[k] * dir, lv = new Uint8Array(144);
+    for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) {
+      const xo = x + off - 12 * dir, xn = x + off;
+      if (from[y * 12 + x] && xo >= 0 && xo < 12) lv[y * 12 + xo] = from[y * 12 + x];
+      if (to[y * 12 + x] && xn >= 0 && xn < 12) lv[y * 12 + xn] = 3;
+    }
+    for (let i = 0; i < 144; i++) if (!lv[i] && prev[i] === 3) lv[i] = 1;
+    prev = lv.map((v, i) => (v === 1 && !to[i] && !from[i] ? 0 : v));
+    return lv;
+  });
+}
+
+function loadPicture(rows, stickerId, dir = 1) {
+  remember();
+  pad = Array.from(rows, w => w & 0xFFF);
+  padSticker = stickerId ?? null;
+  savePad();
+  slideTo(pad, dir);
+}
+
+/* Painting. A stroke starts on the first LED it touches, and that LED
+   decides the stroke: off -> the stroke switches lights on, on -> off.
+   Two ways to make one:
+     - press on the board and drag (mouse, finger, pen)
+     - hold SPACE and just move the mouse over the lights, no button to
+       keep pressed: easier for small hands. */
+let painting = null;          // { id: pointerId | "key", value, last, remembered }
+let lastPointer = null;       // where the mouse is, for a pen key pressed mid-air
+function cellAt(e) {
+  const r = ledsEl.getBoundingClientRect();
+  const x = Math.floor((e.clientX - r.left) / r.width * 12), y = Math.floor((e.clientY - r.top) / r.height * 12);
+  return x >= 0 && x < 12 && y >= 0 && y < 12 ? { x, y } : null;
+}
+function setLed(x, y, on) {
+  const was = (pad[y] >> x) & 1;
+  if (!!was === on) return;
+  pad[y] = on ? pad[y] | (1 << x) : pad[y] & ~(1 << x);
+  padSticker = null;
+  showPad();
+  const c = cells[y * 12 + x];
+  c.classList.remove("pop"); void c.offsetWidth; c.classList.add("pop");
+  Sound.led(y, on);
+}
+function startStroke(id) {
+  stopAnim();
+  painting = { id, value: null, last: null, remembered: false };
+}
+function strokeTo(p) {
+  if (!p) { painting.last = null; return; }   // off the board: lift the pen
+  if (!painting.remembered) { remember(); painting.remembered = true; }
+  if (painting.value === null) painting.value = !((pad[p.y] >> p.x) & 1);
+  /* a quick swipe skips cells between events: fill the gap (Bresenham)
+     so a stroke is always a solid line */
+  let { x, y } = painting.last ?? p;
+  const dx = Math.abs(p.x - x), dy = -Math.abs(p.y - y), sx = x < p.x ? 1 : -1, sy = y < p.y ? 1 : -1;
+  let err = dx + dy;
+  for (;;) {
+    setLed(x, y, painting.value);
+    if (x === p.x && y === p.y) break;
+    const e2 = 2 * err;
+    if (e2 >= dy) { err += dy; x += sx; }
+    if (e2 <= dx) { err += dx; y += sy; }
+  }
+  painting.last = p;
+}
+function endStroke() {
+  if (!painting) return;
+  painting = null;
+  savePad();
+}
+
+ledsEl.addEventListener("pointerdown", e => {
+  const p = cellAt(e);
+  if (!p) return;
+  e.preventDefault();
+  if (painting) endStroke();
+  try { ledsEl.setPointerCapture(e.pointerId); } catch { /* not capturable: the stroke still works over the board */ }
+  startStroke(e.pointerId);
+  strokeTo(p);
+});
+window.addEventListener("pointermove", e => {
+  if (e.pointerType === "mouse") lastPointer = { clientX: e.clientX, clientY: e.clientY };
+  if (!painting) return;
+  const mine = painting.id === e.pointerId || (painting.id === "key" && e.pointerType !== "touch");
+  if (!mine) return;
+  const co = e.getCoalescedEvents?.();
+  for (const ev of co?.length ? co : [e]) strokeTo(cellAt(ev));
+});
+const endPointerStroke = e => { if (painting && painting.id === e.pointerId) endStroke(); };
+ledsEl.addEventListener("pointerup", endPointerStroke);
+ledsEl.addEventListener("pointercancel", endPointerStroke);
+ledsEl.addEventListener("lostpointercapture", endPointerStroke);
+
+/* the pen key */
+const isPenKey = e => e.code === "Space" || e.key === " ";
+const overlayOpen = () => ["sheet", "panel", "modal"].some(id => $(id).classList.contains("open"));
+function penUp() {
+  if (painting?.id === "key") endStroke();
+  $("board").classList.remove("pen");
+}
+document.addEventListener("keydown", e => {
+  if (!isPenKey(e) || overlayOpen() || /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+  e.preventDefault();   // no page scroll, and no "click" on whatever button has focus
+  if (e.repeat || painting?.id === "key") return;
+  if (painting) endStroke();
+  startStroke("key");
+  $("board").classList.add("pen");
+  if (lastPointer) strokeTo(cellAt(lastPointer));
+}, true);
+document.addEventListener("keyup", e => {
+  if (!isPenKey(e)) return;
+  if (!overlayOpen()) e.preventDefault();
+  penUp();
+}, true);
+window.addEventListener("blur", penUp);   // the key may be released in another window
+
+/* ── tools ───────────────────────────────────────────────────────────── */
+$("tUndo").addEventListener("click", () => {
+  const u = undo.pop();
+  if (!u) { Sound.nope(); wiggle(); return; }
+  stopAnim();
+  pad = u.pad; padSticker = u.padSticker;
+  savePad(); showPad(); Sound.slide(-1);
+});
+
+$("tClear").addEventListener("click", () => {
+  if (isBlank(pad)) { Sound.nope(); return; }
+  remember();
+  const from = Uint8Array.from(shown);
+  pad = new Array(12).fill(0); padSticker = null; savePad();
+  Sound.whoosh();
+  play(t => {  // a sponge sweeps the lights off, left to right
+    const col = Math.floor(t / 28) - 1;
+    if (col > 12) return null;
+    const lv = Uint8Array.from(from);
+    for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) {
+      if (x < col) lv[y * 12 + x] = 0;
+      else if (x === col) lv[y * 12 + x] = 1;
+    }
+    return lv;
+  });
+});
+
+/* Dance: what A+B does on the KeyChainino. An untouched built-in plays
+   its own animation; anything else gets the next effect in turn. */
+let fxNext = 0;
+function dance() {
+  const sticker = padSticker && LIBRARY.find(s => s.id === padSticker);
+  Sound.dance();
+  if (sticker) {
+    const tl = timeline(sticker), st = {};
+    play(t => stickerFrame(sticker, tl, t, st));
+    return;
+  }
+  const name = FX_NAMES[fxNext++ % FX_NAMES.length] || "hop", st = {}, pic = pad.slice();
+  play(t => fxFrame(name, t, pic, st));
+}
+$("tDance").addEventListener("click", dance);
+for (const k of ["keyA", "keyB"]) $(k).addEventListener("click", dance);
+
+function wiggle() {
+  const b = $("board");
+  b.classList.remove("wiggle"); void b.offsetWidth; b.classList.add("wiggle");
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Sticker sheet: the built-in pictures, alive
+   ════════════════════════════════════════════════════════════════════ */
+const GROUPS = [["faces", "😊"], ["shapes", "🔷"], ["sky", "🌈"], ["animals", "🐶"], ["toys", "🚗"], ["food", "🍎"]];
+let tiles = null, tilesRaf = 0;
+function buildSheet() {
+  tiles = [];
+  const root = $("groups");
+  for (const [g, icon] of GROUPS) {
+    const list = LIBRARY.filter(s => s.group === g);
+    if (!list.length) continue;
+    const h = document.createElement("h3"); h.textContent = icon; h.setAttribute("aria-label", g);
+    const grid = document.createElement("div"); grid.className = "tiles";
+    for (const s of list) {
+      const b = document.createElement("button"); b.className = "tile"; b.setAttribute("aria-label", s.name);
+      const cv = document.createElement("canvas"), name = document.createElement("span"), badge = document.createElement("i");
+      name.textContent = s.name;
+      badge.className = "badge"; badge.textContent = "✅"; badge.title = "already on the KeyChainino";
+      b.append(cv, name, badge);
+      b.addEventListener("click", () => { closeSheet(); loadPicture(s.frames[0], s.id); });
+      grid.appendChild(b);
+      const tl = timeline(s);
+      tiles.push({ s, b, cv, tl, len: timelineLength(tl) + 900, off: Math.random() * 2500, st: {}, last: null });
+      drawThumb(cv, rowsToLevels(s.frames[0]), 9);
+    }
+    root.append(h, grid);
+  }
+}
+function animateTiles(now) {
+  for (const tile of tiles) {
+    const t = (now + tile.off) % tile.len;
+    if (t < 30) tile.st = {};
+    const lv = stickerFrame(tile.s, tile.tl, t, tile.st) || rowsToLevels(tile.s.frames[0]);
+    const key = lv.join("");
+    if (key !== tile.last) { drawThumb(tile.cv, lv, 9); tile.last = key; }
+  }
+  tilesRaf = requestAnimationFrame(animateTiles);
+}
+function openSheet() {
+  if (!LIBRARY.length) return;
+  if (!tiles) buildSheet();
+  markSheet();
+  $("sheet").classList.add("open");
+  Sound.boing();
+  tilesRaf = requestAnimationFrame(animateTiles);
+}
+function closeSheet() { $("sheet").classList.remove("open"); cancelAnimationFrame(tilesRaf); }
+function markSheet() {
+  for (const t of tiles ?? []) t.b.classList.toggle("ondevice", !!deviceAlbum?.builtins.includes(t.s.uid));
+}
+$("tStickers").addEventListener("click", openSheet);
+$("sheetClose").addEventListener("click", closeSheet);
+$("sheet").addEventListener("click", e => { if (e.target === $("sheet")) closeSheet(); });
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  if ($("sheet").classList.contains("open")) closeSheet();
+  else if ($("panel").classList.contains("open")) closePanel();
+});
+
+/* ════════════════════════════════════════════════════════════════════
+   The shelf: what is on the KeyChainino (as last read), in its order
+   ════════════════════════════════════════════════════════════════════ */
+let deviceAlbum = (() => {   // { drawings: [...] newest first, builtins: [uids], at }
+  const a = store.get("album", null);
+  return a && Array.isArray(a.drawings) && Array.isArray(a.builtins) ? a : null;   // older caches: read again
+})();
+const cachedAlbum = () => ({ drawings: deviceAlbum.drawings.slice().reverse(), builtins: deviceAlbum.builtins, selected: 0 });
+function renderShelf(freshIndex = -1) {
+  const strip = $("strip");
+  strip.replaceChildren();
+  const list = deviceAlbum ? deviceList(cachedAlbum()) : [];
+  $("shelfCount").textContent = deviceAlbum ? String(list.length) : "";
+  $("shelfWhen").textContent = deviceAlbum?.at ? "as of " + new Date(deviceAlbum.at).toLocaleString([], { dateStyle: "short", timeStyle: "short" }) : "";
+  if (!list.length) {
+    const e = document.createElement("div"); e.className = "empty";
+    e.innerHTML = "<i></i><i></i><i></i><span>Your drawings and pictures show up here after you press 🚀</span>";
+    strip.appendChild(e);
+  }
+  list.forEach((item, i) => {
+    const b = document.createElement("button");
+    b.className = "thumb" + (i === freshIndex ? " new" : "");
+    b.setAttribute("aria-label", item.sticker ? item.sticker.name : `Drawing ${i + 1}`);
+    const cv = document.createElement("canvas");
+    b.appendChild(cv);
+    drawThumb(cv, rowsToLevels(item.rows), 6);
+    b.addEventListener("click", () => loadPicture(item.rows, item.sticker?.id ?? null, -1));
+    strip.appendChild(b);
+  });
+  markSheet();
+  renderManager();
+}
+function setDeviceAlbum(album) {
+  deviceAlbum = album ? { drawings: album.drawings.slice().reverse(), builtins: album.builtins.slice(), at: Date.now() } : null;
+  store.set("album", deviceAlbum);
+  edit = null;   // pending editor changes were relative to the old state
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   The grown-ups' editor: what is on the KeyChainino — drawings (× takes
+   off) and chosen pictures (× takes off) — and the rest of the library
+   (tap adds). Changes are staged and written together by Save.
+   ════════════════════════════════════════════════════════════════════ */
+let edit = null;   // { removed: Set(index into deviceAlbum.drawings), builtins: Set(uid) }
+function ensureEdit() {
+  if (!edit && deviceAlbum) edit = { removed: new Set(), builtins: new Set(deviceAlbum.builtins) };
+  return edit;
+}
+function editChanges() {
+  if (!edit) return 0;
+  const was = new Set(deviceAlbum.builtins);
+  let n = edit.removed.size;
+  for (const u of edit.builtins) if (!was.has(u)) n++;
+  for (const u of was) if (!edit.builtins.has(u)) n++;
+  return n;
+}
+function mgrTile(rows, { label, cls = "", mark, onMark, onAdd }) {
+  const m = document.createElement(onAdd ? "button" : "div");
+  m.className = "m " + cls;
+  m.setAttribute("aria-label", onAdd ? `Add ${label}` : label);
+  const cv = document.createElement("canvas");
+  drawThumb(cv, rowsToLevels(rows), 6);
+  m.appendChild(cv);
+  if (onAdd) {
+    const name = document.createElement("span"); name.textContent = label;
+    m.appendChild(name);
+    m.addEventListener("click", onAdd);
+  }
+  if (onMark) {
+    const x = document.createElement("button");
+    x.className = "del"; x.textContent = mark;
+    x.setAttribute("aria-label", (mark === "↺" ? "Keep " : "Take off ") + label);
+    x.addEventListener("click", onMark);
+    m.appendChild(x);
+  }
+  return m;
+}
+function renderManager() {
+  const on = $("mgrOn"), lib = $("mgrLib");
+  on.replaceChildren(); lib.replaceChildren();
+  const e = ensureEdit();
+  $("albumTxt").textContent = deviceAlbum
+    ? `${deviceAlbum.drawings.length} drawing${deviceAlbum.drawings.length === 1 ? "" : "s"} · ${deviceAlbum.builtins.length} picture${deviceAlbum.builtins.length === 1 ? "" : "s"}`
+    : "not read yet";
+  $("mgrNote").hidden = !!e;
+  $("mgrHelp").hidden = $("libTitle").hidden = !e;
+  if (e) {
+    deviceAlbum.drawings.forEach((rows, i) => {
+      const gone = e.removed.has(i);
+      on.appendChild(mgrTile(rows, { label: `Drawing ${i + 1}`, cls: gone ? "gone" : "", mark: gone ? "↺" : "×",
+        onMark: () => { gone ? e.removed.delete(i) : e.removed.add(i); renderManager(); } }));
+    });
+    const was = new Set(deviceAlbum.builtins);
+    for (const st of LIBRARY) {
+      if (e.builtins.has(st.uid)) {
+        on.appendChild(mgrTile(st.frames[0], { label: st.name, cls: was.has(st.uid) ? "" : "new", mark: "×",
+          onMark: () => { e.builtins.delete(st.uid); renderManager(); } }));
+      } else {
+        lib.appendChild(mgrTile(st.frames[0], { label: st.name, onAdd: () => { e.builtins.add(st.uid); renderManager(); } }));
+      }
+    }
+  }
+  updateSaveBar();
+}
+function updateSaveBar() {
+  const n = editChanges();
+  const left = edit ? deviceAlbum.drawings.length - edit.removed.size + edit.builtins.size : 1;
+  $("gSave").textContent = n ? `Save to KeyChainino (${n} change${n === 1 ? "" : "s"})` : "Save to KeyChainino";
+  $("gSave").disabled = busy || !n || left === 0;
+  $("gDiscard").disabled = busy || !n;
+  $("gWipe").disabled = busy || !edit || !deviceAlbum.drawings.length;
+  $("mgrEmpty").hidden = left !== 0;
+}
+$("gDiscard").addEventListener("click", () => { edit = null; renderManager(); });
+$("gWipe").addEventListener("click", () => {
+  if (!ensureEdit()) return;
+  deviceAlbum.drawings.forEach((_, i) => edit.removed.add(i));
+  renderManager();
+});
+$("gSave").addEventListener("click", async () => {
+  const e = edit;
+  if (!e || busy || !editChanges()) return;
+  const removeDrawings = [...e.removed].map(i => deviceAlbum.drawings[i]);
+  const builtins = LIBRARY.filter(st => e.builtins.has(st.uid)).map(st => st.uid);
+  const r = await withLatestProgram(a => albumEdited(a, { removeDrawings, builtins }), "Saving the pictures…", "save");
+  if (r?.album) {
+    log(`✓ saved: ${r.album.drawings.length} drawings and ${r.album.builtins.length} pictures on the KeyChainino — it restarts`, "g");
+  }
+});
+
+/* ════════════════════════════════════════════════════════════════════
+   Grown-ups panel
+   ════════════════════════════════════════════════════════════════════ */
+const logEl = $("log");
+function log(msg, cls = "") {
+  const line = document.createElement("div");
+  line.className = cls;
+  line.textContent = `${new Date().toTimeString().slice(0, 8)}  ${msg}`;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+hooks.log = log;
+hooks.phase = p => { $("phase").textContent = p; log(p, "d"); };
+hooks.progress = (d, t) => {
+  const f = t ? Math.min(1, d / t) : 0;
+  $("bar").firstElementChild.style.width = Math.round(f * 100) + "%";
+  $("tSend").style.setProperty("--p", f);
+};
+function setProgrammer(state, text) { $("progDot").className = "dot" + (state ? " " + state : ""); $("progTxt").textContent = text; }
+
+/* hold-to-open: little fingers tap, grown-ups hold for a second */
+function holdToOpen(btn, open) {
+  let t0 = 0, raf = 0;
+  const tick = () => {
+    const p = Math.min(1, (performance.now() - t0) / 900);
+    btn.style.setProperty("--p", p);
+    if (p >= 1) { cancel(); open(); return; }
+    raf = requestAnimationFrame(tick);
+  };
+  const start = e => { e.preventDefault(); t0 = performance.now(); raf = requestAnimationFrame(tick); };
+  const cancel = () => { cancelAnimationFrame(raf); btn.style.setProperty("--p", 0); };
+  btn.addEventListener("pointerdown", start);
+  ["pointerup", "pointerleave", "pointercancel"].forEach(t => btn.addEventListener(t, cancel));
+  btn.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && !e.repeat) start(e); });
+  btn.addEventListener("keyup", cancel);
+  btn.addEventListener("contextmenu", e => e.preventDefault());
+}
+holdToOpen($("btnGrown"), () => openPanel());
+holdToOpen($("btnManage"), () => openPanel("drawings"));
+function openPanel(section) {
+  $("panel").classList.add("open");
+  renderManager();
+  if (section === "drawings") $("mgrTitle").scrollIntoView({ block: "start" });
+}
+function closePanel() { $("panel").classList.remove("open"); }
+$("panelClose").addEventListener("click", closePanel);
+$("panel").addEventListener("click", e => { if (e.target === $("panel")) closePanel(); });
+
+$("btnSound").addEventListener("click", () => { Sound.on = !Sound.on; syncSoundUi(); if (Sound.on) Sound.boing(); });
+$("optSound").addEventListener("change", e => { Sound.on = e.target.checked; syncSoundUi(); });
+function syncSoundUi() { $("btnSound").textContent = Sound.on ? "🔊" : "🔇"; $("optSound").checked = Sound.on; }
+
+isp.sckId = Number(store.get("sck", 10));
+$("optSck").value = String(isp.sckId);
+$("optSck").addEventListener("change", e => { isp.sckId = Number(e.target.value); store.set("sck", isp.sckId); sckControl = null; });
+
+/* ════════════════════════════════════════════════════════════════════
+   Talking to the KeyChainino
+   ════════════════════════════════════════════════════════════════════ */
+let busy = false;
+function setBusy(b) {
+  busy = b;
+  for (const id of ["gConnect", "gRead", "gRead2", "gInstall"]) $(id).disabled = b;
+  updateSaveBar();
+  $("tSend").classList.toggle("busy", b);
+  $("tSend").classList.toggle("idle", !b);
+  if (!b) $("tSend").style.setProperty("--p", 0);
+  if (dev) setProgrammer(b ? "busy" : "on", b ? "working…" : $("progTxt").dataset.name || "connected");
+}
+
+async function ensureProgrammer() {
+  if (dev) return true;
+  if (!navigator.usb) throw new Error("this browser cannot talk to USB devices — use Chrome or Edge on a computer");
+  let d;
+  try { d = await navigator.usb.requestDevice({ filters: USB_FILTERS }); }
+  catch (e) { if (e.name === "NotFoundError") return false; throw e; }
+  const name = await attach(d);
+  $("progTxt").dataset.name = name;
+  setProgrammer("on", name);
+  log(`programmer connected — ${name}`, "g");
+  return true;
+}
+
+/* run one device job with busy state, errors to the log; returns its result */
+async function runDevice(job, phase, after) {
+  if (busy) return null;
+  try {
+    if (!await ensureProgrammer()) { log("no programmer selected", "d"); return null; }
+  } catch (e) { log("connect failed: " + e.message, "e"); setProgrammer("bad", "connection failed"); return { error: e }; }
+  setBusy(true);
+  hooks.phase(phase);
+  hooks.progress(0.02, 1);
+  try {
+    const r = await job();
+    if (r?.album) { setDeviceAlbum(r.album); renderShelf(); }
+    if (r?.installed !== undefined || r?.album !== undefined) describeTarget(r);
+    after?.(r);
+    $("phase").textContent = "Done";
+    return r;
+  } catch (e) {
+    log("✗ " + e.message, "e");
+    $("phase").textContent = "Failed";
+    if (/no device selected|disconnected|NetworkError|transfer error/i.test(e.message)) { dev = null; setProgrammer("bad", "lost the programmer — reconnect"); }
+    return { error: e };
+  } finally { setBusy(false); }
+}
+/* Any change to the KeyChainino needs the latest Pictures program (the one
+   in this page): an older one may not understand the album. If it isn't
+   there, say so and offer to install it; nothing is written before the
+   grown-up agrees. Returns the final result, { cancelled } or null. */
+async function withLatestProgram(mutate, phase, verb, onAsk) {
+  let r = await runDevice(() => updateAlbum(mutate), phase);
+  if (!r?.needInstall) return r;
+  log(r.olderPictures ? "this KeyChainino needs the latest version of the Pictures program"
+                      : "this KeyChainino needs the Pictures program", "w");
+  $("phase").textContent = "Update needed";
+  onAsk?.();
+  const c = await ask(r.olderPictures
+    ? { icon: "🆕", title: "Update needed",
+        text: `This KeyChainino has an older version of the Pictures program. Update it to the latest version to ${verb}. It takes about 15 seconds and keeps the drawings.`,
+        buttons: [["cancel", "Not now"], ["go", `Update & ${verb}`, true]] }
+    : { icon: "🔧", title: "Install the Pictures program?",
+        text: "The KeyChainino needs the Pictures program first. It takes about 15 seconds and replaces whatever is on it now (games, high scores).",
+        buttons: [["cancel", "Not now"], ["go", `Install & ${verb}`, true]] });
+  if (c !== "go") return { cancelled: true };
+  const inst = await runDevice(() => installFirmware().then(() => ({ updated: true })), "Installing the Pictures program…");
+  if (!inst?.updated) return inst;
+  log("✓ Pictures program installed (latest version)", "g");
+  return runDevice(() => updateAlbum(mutate), phase);
+}
+function describeTarget(r) {
+  if (!r.part) return;
+  const what = r.installed ? "Pictures program installed ✓"
+    : r.album ? "older Pictures program — update to the latest version"
+    : "Pictures program not installed";
+  $("kcTxt").textContent = `${r.part} · ${what}${r.fusesOk === false ? " · fuses need setting" : ""}`;
+}
+
+$("gConnect").addEventListener("click", async () => {
+  if (busy) return;
+  dev = null;
+  try { await ensureProgrammer(); } catch (e) { log("connect failed: " + e.message, "e"); }
+});
+const readDevice = () => runDevice(async () => {
+  const r = await inspect();
+  if (!r.album) { log("no Pictures album on this KeyChainino (Install / update puts one on)", "w"); setDeviceAlbum(null); renderShelf(); }
+  else log(`on the KeyChainino: ${r.album.drawings.length} drawing(s), ${r.album.builtins.length} picture(s)`, "g");
+  return r;
+}, "Reading the KeyChainino…");
+$("gRead").addEventListener("click", readDevice);
+$("gRead2").addEventListener("click", readDevice);
+$("gInstall").addEventListener("click", () => runDevice(async () => {
+  await installFirmware();
+  return await inspect();
+}, "Installing the Pictures program…", r => r && !r.error && log("✓ Pictures program installed — the KeyChainino restarts", "g")));
+/* ── modal ───────────────────────────────────────────────────────────── */
+function ask({ icon, title, text, buttons }) {
+  return new Promise(resolve => {
+    $("mIcon").textContent = icon; $("mTitle").textContent = title; $("mText").textContent = text;
+    const row = $("mBtns"); row.replaceChildren();
+    for (const [val, label, primary] of buttons) {
+      const b = document.createElement("button");
+      b.className = "btn" + (primary ? " primary" : ""); b.textContent = label;
+      b.addEventListener("click", () => { $("modal").classList.remove("open"); resolve(val); });
+      row.appendChild(b);
+    }
+    $("modal").classList.add("open");
+    row.lastElementChild.focus();
+  });
+}
+
+/* ── kid feedback ────────────────────────────────────────────────────── */
+let bubbleTimer = 0;
+function say(text, ms = 2600) {
+  const b = $("bubble");
+  b.textContent = text; b.classList.add("show");
+  clearTimeout(bubbleTimer);
+  if (ms) bubbleTimer = setTimeout(() => b.classList.remove("show"), ms);
+}
+
+const Confetti = (() => {
+  const cv = $("confetti"), g = cv.getContext("2d");
+  let parts = [], raf = 0;
+  const COLORS = ["#ff3d63", "#ffcf3f", "#4cc9f0", "#5fd68c", "#a77bff", "#ff9f1c"];
+  function frame() {
+    g.clearRect(0, 0, cv.width, cv.height);
+    parts = parts.filter(p => p.y < cv.height + 20 && p.life-- > 0);
+    for (const p of parts) {
+      p.vy += .35; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = p.c;
+      p.round ? (g.beginPath(), g.arc(0, 0, p.s / 2, 0, 7), g.fill()) : g.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2);
+      g.restore();
+    }
+    raf = parts.length ? requestAnimationFrame(frame) : 0;
+  }
+  return {
+    burst(el) {
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      cv.width = innerWidth; cv.height = innerHeight;
+      const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      for (let i = 0; i < 140; i++) {
+        const a = Math.random() * Math.PI * 2, v = 6 + Math.random() * 10;
+        parts.push({ x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 8, r: 0, vr: (Math.random() - .5) * .4,
+                     s: 8 + Math.random() * 8, c: COLORS[i % COLORS.length], round: Math.random() < .3, life: 160 });
+      }
+      if (!raf) raf = requestAnimationFrame(frame);
+    },
+  };
+})();
+
+/* ════════════════════════════════════════════════════════════════════
+   🚀 Send
+   ════════════════════════════════════════════════════════════════════ */
+$("tSend").addEventListener("click", send);
+async function send() {
+  if (busy) return;
+  const sticker = padSticker && LIBRARY.find(st => st.id === padSticker);
+  if (!sticker && isBlank(pad)) { wiggle(); Sound.nope(); say("✏️ Draw something first!"); return; }
+  if (!navigator.usb) {
+    say("🙂 Ask a grown-up!");
+    log("sending needs WebUSB — open this page in Chrome or Edge on a computer", "w");
+    return;
+  }
+  const rows = pad.slice();
+  const mutate = sticker ? a => albumWithBuiltin(a, sticker.uid) : a => albumWith(a, rows);
+  say("🚀 Here it goes…", 0);
+  $("tSend").classList.add("busy");            // the ring shows up right away,
+  $("tSend").style.setProperty("--p", 0.02);   // before the programmer even answers
+  Sound.launch();
+  $("board").classList.remove("launch"); void $("board").offsetWidth; $("board").classList.add("launch");
+
+  const r = await withLatestProgram(mutate, "Sending the picture…", "send", () => say("🔧 Ask a grown-up!", 0));
+  if (r?.cancelled) { say("👍 OK!"); return; }
+  if (!r) { say("🔌 Ask a grown-up!"); return; }
+  if (r.error || !r.album) {
+    Sound.uhoh(); wiggle();
+    say("😕 Oops! Ask a grown-up", 4000);
+    return;
+  }
+  Sound.yay();
+  Confetti.burst($("tSend"));
+  say(r.info.existed ? "🎉 It's on your KeyChainino!" : "🎉 Yay! Look at your KeyChainino!", 3500);
+  if (r.info.dropped) log("the KeyChainino was full: the oldest drawing made room", "w");
+  if (sticker) log(r.info.existed ? `${sticker.name} was already on the KeyChainino — now it is the one shown`
+                                  : `✓ ${sticker.name} added, with its animation — the KeyChainino restarts and shows it`, "g");
+  else log(r.info.existed ? "that drawing was already there — now it is the one shown"
+                          : "✓ drawing added — the KeyChainino restarts and shows it", "g");
+  renderShelf(r.info.selected);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Boot
+   ════════════════════════════════════════════════════════════════════ */
+(function boot() {
+  syncSoundUi();
+  showPad();
+  renderShelf();
+  $("fwTxt").textContent = FIRMWARE
+    ? `Pictures program built ${FIRMWARE.built} · ${FIRMWARE.bytes.toLocaleString()} B · ${LIBRARY.length} pictures`
+    : "no firmware embedded — run tools/build.mjs";
+  if (!navigator.usb) {
+    setProgrammer("bad", "this browser has no WebUSB (use Chrome or Edge)");
+    for (const id of ["gConnect", "gRead", "gRead2", "gInstall"]) $(id).disabled = true;
+    log("drawing works here, but sending needs WebUSB: Chrome or Edge on a computer", "w");
+    return;
+  }
+  log("ready — draw, then press 🚀", "d");
+  navigator.usb.getDevices().then(list => {
+    const d = list.find(isUsbasp);
+    if (d) attach(d).then(name => { $("progTxt").dataset.name = name; setProgrammer("on", name); log(`programmer connected — ${name}`, "g"); })
+                    .catch(err => log("auto-connect failed: " + err.message, "w"));
+  });
+  navigator.usb.addEventListener("disconnect", ev => {
+    if (ev.device === dev) { dev = null; setProgrammer("bad", "programmer unplugged"); log("programmer disconnected", "w"); }
+  });
+})();
+</script>
+</body>
+</html>

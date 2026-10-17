@@ -207,13 +207,19 @@ void begin() {
 
   /* Power down everything this firmware never uses. Timer1 too: the
      rethought engine paces every game from the frame loop, so no game
-     needs a hardware tick of its own anymore. */
+     needs a hardware tick of its own anymore.
+     The brown-out detector is not here because software can't switch it
+     off: the fuses do (efuse 0xFF = BODLEVEL 111, off from power-on, and
+     the flasher and the pictures page both write and check it). The
+     datasheet's BODS sequence only suspends a fused-on BOD for the very
+     next SLEEP, so there is nothing for code to do. */
   ADCSRA = 0;
   power_adc_disable();
   power_spi_disable();
   power_usart0_disable();
   power_twi_disable();
   power_timer1_disable();
+  MCUSR = 0;  // WDRF overrides WDE: clear it first, or wdt_disable() can't win
   wdt_disable();
 }
 
@@ -226,6 +232,7 @@ void resume() {
   noInterrupts();
   TCNT2 = 0;
   OCR2A = SLOT0_TICKS - 1;
+  TIFR2 = _BV(OCF2A);  // a match left pending at park() would cut the first slot short
   TIMSK2 = _BV(OCIE2A);
   interrupts();
 }
